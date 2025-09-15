@@ -9,13 +9,17 @@ build:
   script:
     - npm ci
     - npm run build
+  artifacts:
+    paths:
+      - node_modules/
+      - .next/
 
 # Test Stage
 test:
   stage: test
+  dependencies:
+    - build
   script:
-    - npm ci
-    - npm run build
     - npx cypress run
 
 # Deploy Stage
