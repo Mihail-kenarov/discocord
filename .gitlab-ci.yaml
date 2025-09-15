@@ -1,0 +1,35 @@
+stages:
+  - build
+  - test
+  - deploy
+
+# Build Stage
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+
+# Test Stage
+test:
+  stage: test
+  script:
+    - npm ci
+    - npm run build
+    - npx cypress run
+
+# Deploy Stage
+deploy:
+  stage: deploy
+  script:
+    # Stop and remove the existing container if it exists
+    - if (docker ps -a --filter "name=discocord_fe" | Select-String "discocord_fe") { docker rm -f discocord_fe }
+
+    # Remove the old image if it exists
+    - if (docker images -q discocord_fe) { docker rmi discocord_fe }
+
+    # Build the Docker image
+    - docker build -t discocord_fe .
+
+    # Run the new container
+    - docker run -d -p 3000:3000 --name discocord_fe discocord_fe
