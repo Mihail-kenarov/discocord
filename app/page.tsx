@@ -12,9 +12,9 @@ export default function Home() {
           height={38}
           priority
         />
-        <p>This is a test</p>
+        <p>This is a test, for the gitlab runner</p>
         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
+          <li className="mb-2 tracking-[-,.01em]">
             Get started by editing{" "}
             <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
               app/page.tsx
