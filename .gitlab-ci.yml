@@ -9,10 +9,17 @@ build:
   script:
     - npm ci
     - npm run build
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .next/cache/
+      - npm-cache\
+    policy: pull-push
   artifacts:
     paths:
-      - node_modules/
       - .next/
+      - node_modules/
+    expire_in: 1h
 
 # Test Stage
 test:
