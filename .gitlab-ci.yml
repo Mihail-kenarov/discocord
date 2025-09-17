@@ -3,7 +3,6 @@ stages:
   - test
   - deploy
 
-
 # Build Stage
 build:
   stage: build
