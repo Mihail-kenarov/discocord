@@ -11,5 +11,10 @@ export default function Home() {
         className="object-cover"
       />
     </div>
+
+
+
+
+
   );
 }
