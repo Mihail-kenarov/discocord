@@ -21,7 +21,7 @@ test:
     - build
   script:
     - npm ci              # reinstall deps, don't rely on artifacts
-    - npm start &         # start Next.js
+    - npm start        # start Next.js
     - Start-Sleep -Seconds 10
     - npx cypress run
 
