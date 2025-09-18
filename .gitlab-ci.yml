@@ -9,23 +9,18 @@ build:
   script:
     - npm ci
     - npm run build
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - .next/cache/
-      - node_modules/
   artifacts:
     paths:
-      - .next/
       - node_modules/
-    expire_in: 1h
+      - .next/
 
 # Test Stage
 test:
   stage: test
+  dependencies:
+    - build
   script:
-    - npm run build   
-    - npx cypress run --headless
+    - npx cypress run
 
 # Deploy Stage
 deploy:
