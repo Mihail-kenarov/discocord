@@ -11,8 +11,8 @@ build:
     - npm run build
   artifacts:
     paths:
-      - node_modules/
-      - .next/
+    - node_modules/
+    - .next/
 
 # Test Stage
 test:
@@ -20,9 +20,6 @@ test:
   dependencies:
     - build
   script:
-    - npm ci              # reinstall deps, don't rely on artifacts
-    - npm start        # start Next.js
-    - Start-Sleep -Seconds 10
     - npx cypress run
 
 # Deploy Stage
