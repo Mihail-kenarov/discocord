@@ -13,7 +13,7 @@ build:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
       - .next/cache/
-      - npm-cache\
+      - node_modules/
   artifacts:
     paths:
       - .next/
@@ -26,6 +26,13 @@ test:
   dependencies:
     - build
   script:
+    # Start the built Next.js app in the background
+    - npm run start &
+
+    # Wait until it's responding before running Cypress
+    - npx wait-on http://localhost:3000
+
+    # Run Cypress against the running app
     - npx cypress run
 
 # Deploy Stage
