@@ -14,19 +14,18 @@ build:
     paths:
       - .next/cache/
       - node_modules/
-  # artifacts:
-  #   paths:
-  #     - .next/
-  #     - node_modules/
-  #   expire_in: 1h
+  artifacts:
+    paths:
+      - .next/
+      - node_modules/
+    expire_in: 1h
 
 # Test Stage
 test:
   stage: test
-  dependencies:
-    - build
   script:
-    # Run Cypress against the running app
+    - npm ci
+    - npm run build   # if Cypress needs a running Next.js app
     - npx cypress run
 
 # Deploy Stage
