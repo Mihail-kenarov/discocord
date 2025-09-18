@@ -20,6 +20,7 @@ test:
   dependencies:
     - build
   script:
+    - npm install
     - npx cypress run
 
 # Deploy Stage
