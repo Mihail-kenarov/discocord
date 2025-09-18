@@ -14,7 +14,6 @@ build:
     paths:
       - .next/cache/
       - npm-cache\
-    policy: pull-push
   artifacts:
     paths:
       - .next/
