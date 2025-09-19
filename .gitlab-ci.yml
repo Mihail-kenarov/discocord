@@ -32,8 +32,8 @@ deploy:
     # Remove the old image if it exists
     - if (docker images -q discocord_fe) { docker rmi discocord_fe }
 
-    # Build the Docker image
-    - docker build -t discocord_fe .
+    # Build the Docker image (pass Clerk key as build-arg)
+    - docker build --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY -t discocord_fe .
 
-    # Run the new container
-    - docker run -d -p 3300:3000 --name discocord_fe discocord_fe
+    # Run the new container (ensure runtime env is passed too)
+    - docker run -d -p 3300:3000 --name discocord_fe -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY discocord_fe
