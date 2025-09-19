@@ -14,14 +14,16 @@ build:
     - node_modules/
     - .next/
 
-# Test Stage
 test:
+  image: node:latest
   stage: test
-  dependencies:
-    - build
   script:
-    - npm install
-    - npx cypress run
+    # install dependencies
+    - npm ci
+    # start the server in the background
+    - npm start 
+    # run Cypress tests
+    - npm run e2e
 
 # Deploy Stage
 deploy:
