@@ -13,7 +13,7 @@ export interface ApiError {
   details?: unknown;
 }
 
-async function getGateway<T = unknown>(path: string, signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
+export async function getGateway<T = unknown>(path: string, signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
   try {
     const url = `${BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
     const response = await axios.get<T>(url, { signal });
