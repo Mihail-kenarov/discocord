@@ -16,7 +16,7 @@ export function ClientGatewayButton() {
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       const text = await res.text();
       setResult(text);
-    } catch (e: any) {
+    } catch (e: any | unknown) {
       setError(e.message || "Request failed");
     } finally {
       setLoading(false);
