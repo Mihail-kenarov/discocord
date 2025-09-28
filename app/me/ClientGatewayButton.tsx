@@ -1,8 +1,6 @@
 "use client";
-
-import { useState } from 'react';
-import { getGateway } from '@/app/apis/callsAPI';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function ClientGatewayButton() {
   const [loading, setLoading] = useState(false);
@@ -13,24 +11,29 @@ export function ClientGatewayButton() {
     setLoading(true);
     setResult(null);
     setError(null);
-    const { data, error } = await getGateway<string>('/');
-    if (error) {
-      setError(`${error.status ? error.status + ' ' : ''}${error.message}`);
-    } else if (data) {
-      setResult(typeof data === 'string' ? data : JSON.stringify(data));
+    try {
+      const res = await fetch("/gw/"); // now hits rewrite → gateway
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      const text = await res.text();
+      setResult(text);
+    } catch (e: any) {
+      setError(e.message || "Request failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <Button onClick={handleClick} disabled={loading} variant="secondary" size="lg">
-        {loading ? 'Calling Gateway…' : 'Call Gateway'}
+      <Button onClick={handleClick} disabled={loading} variant="secondary">
+        {loading ? "Calling Gateway..." : "Call Gateway"}
       </Button>
       {result && (
-        <pre className="text-xs bg-black/40 p-3 rounded-md max-w-xs whitespace-pre-wrap">{result}</pre>
+        <pre className="text-xs bg-black/30 px-3 py-2 rounded max-w-xs overflow-x-auto">
+          {result}
+        </pre>
       )}
-      {error && <p className="text-xs text-rose-300">{error}</p>}
+      {error && <p className="text-red-400 text-sm">{error}</p>}
     </div>
   );
 }
