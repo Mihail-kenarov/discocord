@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 
 // Images in /public: landing_landscape.jpg (desktop), landing_boi.jpg (mobile portrait)
 export default function Home() {
@@ -45,16 +45,14 @@ export default function Home() {
           Never miss out on the moments, jokes, late-night rants, or spontaneous game squads. Your spaces are waiting—jump back into the conversation.
         </p>
         <SignedOut>
-          <SignInButton>
-            <button className="rounded-full bg-white px-10 py-4 text-base md:text-lg font-semibold text-[#23272A] shadow hover:shadow-lg hover:scale-[1.03] active:scale-100 transition">
-              Start Chatting
-            </button>
-          </SignInButton>
+          <a href="/sign-in" className="rounded-full bg-white px-10 py-4 text-base md:text-lg font-semibold text-[#23272A] shadow hover:shadow-lg hover:scale-[1.03] active:scale-100 transition">
+            Start Chatting
+          </a>
         </SignedOut>
         <SignedIn>
-          <button className="rounded-full bg-[#23272A] px-10 py-4 text-base md:text-lg font-semibold text-white shadow hover:bg-[#1e2224] hover:scale-[1.03] active:scale-100 transition">
+          <a href="/me" className="rounded-full bg-[#23272A] px-10 py-4 text-base md:text-lg font-semibold text-white shadow hover:bg-[#1e2224] hover:scale-[1.03] active:scale-100 transition">
             Enter Your Spaces
-          </button>
+          </a>
         </SignedIn>
       </section>
     </main>
