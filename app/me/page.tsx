@@ -1,5 +1,6 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { Suspense } from 'react';
+import { ClientGatewayButton } from './ClientGatewayButton';
 
 // Server component wrapper to fetch user and render client portion
 export default async function MePage() {
@@ -13,6 +14,7 @@ export default async function MePage() {
         This is your personal space. More features coming soon.
       </p>
       <Suspense fallback={<div className="text-white/60 text-sm">Loading action...</div>}>
+        <ClientGatewayButton />
       </Suspense>
     </main>
   );
