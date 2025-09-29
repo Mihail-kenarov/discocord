@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/gw/:path*',
-        destination: 'http://discordgw:8090/:path*', // gateway
+        destination: 'http://discocordgw:8080/:path*', // gateway
       },
     ];
   },
