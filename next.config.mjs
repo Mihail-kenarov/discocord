@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/gw/:path*',
-        destination: 'http://localhost:8090/:path*', // gateway
+        destination: 'http://discordgw:8090/:path*', // gateway
       },
     ];
   },
