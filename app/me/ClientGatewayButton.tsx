@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { getGatewayUsers } from "@/app/apis/callsAPI";
 
 export function ClientGatewayButton() {
   const [loading, setLoading] = useState(false);
@@ -12,10 +13,9 @@ export function ClientGatewayButton() {
     setResult(null);
     setError(null);
     try {
-      const res = await fetch("/gw/"); // now hits rewrite → gateway
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const text = await res.text();
-      setResult(text);
+      const { data, error } = await getGatewayUsers();
+      if (error) throw new Error(`${error.status} ${error.message}`);
+      setResult(JSON.stringify(data, null, 2));
     } catch (e: unknown) {
       setError((e as Error).message);
     } finally {

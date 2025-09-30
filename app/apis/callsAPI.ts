@@ -5,7 +5,7 @@
 
 import axios, { AxiosError } from 'axios';
 
-const BASE_URL = 'http://localhost:8080/users/'; // fixed per request; replace with env var when environments expand
+const BASE_URL = 'http://localhost:8080/'; // fixed per request; replace with env var when environments expand
 
 export interface ApiError {
   message: string;
@@ -35,3 +35,9 @@ export async function getGateway<T = unknown>(path: string, signal?: AbortSignal
 // export async function getHealth() {
 //   return getFromBackend<{ status: string }>('/health');
 // }
+
+// Direct convenience call specifically for the users collection at the gateway.
+// Returns whatever the gateway responds with at /users/.
+export async function getGatewayUsers<T = unknown>(signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
+  return getGateway<T>('/users/', signal);
+}
