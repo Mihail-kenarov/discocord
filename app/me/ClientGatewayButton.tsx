@@ -8,6 +8,7 @@ export function ClientGatewayButton() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  
   async function handleClick() {
     setLoading(true);
     setResult(null);
