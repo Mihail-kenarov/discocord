@@ -5,7 +5,7 @@
 
 import axios, { AxiosError } from 'axios';
 
-const BASE_URL = 'http://localhost:8090'; // fixed per request; replace with env var when environments expand
+const BASE_URL = 'http://localhost:8080/users/'; // fixed per request; replace with env var when environments expand
 
 export interface ApiError {
   message: string;

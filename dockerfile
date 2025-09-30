@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-# 👇 accept build-time arg and expose as env var
+#  accept build-time arg and expose as env var
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
@@ -25,7 +25,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-# 👇 runtime env var still needs to exist, so keep it here too
+#  runtime env var still needs to exist, so keep it here too
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
