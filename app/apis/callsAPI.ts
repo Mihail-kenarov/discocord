@@ -31,11 +31,6 @@ export async function getGateway<T = unknown>(path: string, signal?: AbortSignal
   }
 }
 
-// Convenience example wrapper (commented out until needed)
-// export async function getHealth() {
-//   return getFromBackend<{ status: string }>('/health');
-// }
-
 // Direct convenience call specifically for the users collection at the gateway.
 // Returns whatever the gateway responds with at /users/.
 export async function getGatewayUsers<T = unknown>(signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
