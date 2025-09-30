@@ -5,7 +5,7 @@
 
 import axios, { AxiosError } from 'axios';
 
-const BASE_URL = 'http://discocord_gw:8080'; // fixed per request; replace with env var when environments expand
+const BASE_URL = '/gw'; // fixed per request; replace with env var when environments expand
 
 export interface ApiError {
   message: string;
