@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/gw/:path*',
-        destination: 'http://discocordgw:8080/:path*', // gateway
+        destination: 'http://discocord_gw:8080/:path*', // gateway
       },
     ];
   },
