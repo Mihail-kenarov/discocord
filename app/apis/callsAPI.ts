@@ -36,3 +36,8 @@ export async function getGateway<T = unknown>(path: string, signal?: AbortSignal
 export async function getGatewayUsers<T = unknown>(signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
   return getGateway<T>('/users', signal);
 }
+
+// Returns whatever the gateway responds with at /users/.
+export async function getGatewayUserwithId<T = unknown>(id: string | number, signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
+  return getGateway<T>(`/users/${id}`, signal);
+}
