@@ -34,5 +34,5 @@ export async function getGateway<T = unknown>(path: string, signal?: AbortSignal
 // Direct convenience call specifically for the users collection at the gateway.
 // Returns whatever the gateway responds with at /users/.
 export async function getGatewayUsers<T = unknown>(signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
-  return getGateway<T>('users', signal);
+  return getGateway<T>('/users', signal);
 }
