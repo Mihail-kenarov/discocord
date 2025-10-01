@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getGatewayUsers } from "@/app/apis/callsAPI";
+import { getGatewayUsers,getGatewayUserwithId } from "@/app/apis/callsAPI";
 
 export function ClientGatewayButton() {
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ export function ClientGatewayButton() {
     setResult(null);
     setError(null);
     try {
-      const { data, error } = await getGatewayUsers();
+      const { data, error } = await getGatewayUserwithId(22244422);
       if (error) throw new Error(`${error.status} ${error.message}`);
       setResult(JSON.stringify(data, null, 2));
     } catch (e: unknown) {
