@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getGatewayUsers,getGatewayUserwithId } from "@/app/apis/callsAPI";
+import { getGatewayUsers,getGatewayUserwithId } from "@/app/api/callsAPI";
 
 export function ClientGatewayButton() {
   const [loading, setLoading] = useState(false);
