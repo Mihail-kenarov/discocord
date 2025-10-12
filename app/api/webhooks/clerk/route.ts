@@ -17,9 +17,11 @@ export async function POST(req: NextRequest) {
         lastName: evt.data.last_name,
       };
 
+
       // Use Docker internal address for the gateway
       const gatewayURL = "http://discocord_gw:8080/users";
 
+      
       const resp = await fetch(gatewayURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
