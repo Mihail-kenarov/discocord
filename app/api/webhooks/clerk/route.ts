@@ -32,7 +32,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    
     return new Response("Webhook processed successfully", { status: 200 });
   } catch (err) {
     console.error("Error verifying webhook:", err);
