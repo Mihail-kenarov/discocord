@@ -26,17 +26,19 @@ test:
 deploy:
   stage: deploy
   script:
-    # Ensure Docker network exists
     - if (-not (docker network ls --format "{{.Name}}" | Select-String -Pattern "^discocord_net$")) { docker network create discocord_net }
-
-    # Remove existing container/image if present
     - if (docker ps -a --filter "name=discocord_fe" | Select-String "discocord_fe") { docker rm -f discocord_fe }
     - if (docker images -q discocord_fe) { docker rmi -f discocord_fe }
 
-    # Build the image (no secret build args)
-    - docker build --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" -t discocord_fe .
+    # Build image with Clerk key available during build
+    - docker build `
+        --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" `
+        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY `
+        --build-arg CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY `
+        --build-arg CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET `
+        -t discocord_fe .
 
-    # Run container with secrets injected only at runtime
+    # Run container with runtime secrets
     - docker run -d `
         --name discocord_fe `
         --network discocord_net `
