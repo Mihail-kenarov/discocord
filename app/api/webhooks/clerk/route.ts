@@ -12,9 +12,11 @@ export async function POST(req: NextRequest) {
     if (eventType === "user.created") {
       const userData = {
         clerkUserId: evt.data.id,
+        username: evt.data.username,
         email: evt.data.email_addresses?.[0]?.email_address,
         firstName: evt.data.first_name,
         lastName: evt.data.last_name,
+        createdAt: evt.data.created_at,
       };
 
 
