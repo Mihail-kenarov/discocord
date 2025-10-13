@@ -20,10 +20,10 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 # Copy only the necessary files from the builder stage
-# COPY --from=builder /app/package.json ./package.json
-# COPY --from=builder /app/node_modules ./node_modules
-# COPY --from=builder /app/.next ./.next
-# COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 
 # #  runtime env var still needs to exist, so keep it here too
 # ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
