@@ -29,5 +29,5 @@ deploy:
     - if (-not (docker network ls --format "{{.Name}}" | Select-String -Pattern "^discocord_net$")) { docker network create discocord_net }
     - if (docker ps -a --filter "name=discocord_fe" | Select-String "discocord_fe") { docker rm -f discocord_fe }
     - if (docker images -q discocord_fe) { docker rmi -f discocord_fe }
-    - docker build --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY --build-arg CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY -t discocord_fe .
-    - docker run -d --name discocord_fe --network discocord_net -p 3300:3000 -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY -e CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY discocord_fe
+    - docker build --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY --build-arg CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY --build-arg CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET -t discocord_fe .
+    - docker run -d --name discocord_fe --network discocord_net -p 3300:3000 -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY -e CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY -e CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET discocord_fe
