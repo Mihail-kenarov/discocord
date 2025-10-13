@@ -3,6 +3,7 @@ import { SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 // Images in /public: landing_landscape.jpg (desktop), landing_boi.jpg (mobile portrait)
 export default function Home() {
+  
   return (
     <main className="relative min-h-screen w-full bg-[#404eed] overflow-hidden"> {/* full viewport height */}
       {/* Background Images */}
