@@ -7,6 +7,11 @@ default:
   before_script:
     - if (-not (Get-Command bun -ErrorAction SilentlyContinue)) { Invoke-Expression (Invoke-WebRequest -UseBasicParsing https://bun.sh/install.ps1).Content }
     - $env:Path = "$env:USERPROFILE\.bun\bin;$env:Path"
+  cache:
+    key: "node-modules-$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull-push
 
 # Build Stage
 build:
@@ -16,7 +21,6 @@ build:
     - bun run build
   artifacts:
     paths:
-    - node_modules/
     - .next/
 
 # Test Stage
