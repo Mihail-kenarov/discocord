@@ -25,8 +25,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-      <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#23272A]`}> {/* base dark bg behind hero */}
+      <html lang="en" className="dark">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}> {/* use tokens from globals.css for theming */}
           {/* Show user button only when authenticated; remove header gap for signed out users */}
           <SignedIn>
             <div className="fixed top-2 right-2 z-50 flex items-center gap-3 p-2 rounded-full bg-black/30 backdrop-blur-sm shadow-sm">
