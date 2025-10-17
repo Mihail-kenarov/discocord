@@ -3,6 +3,11 @@ stages:
   - test
   - deploy
 
+default:
+  before_script:
+    - if (-not (Get-Command bun -ErrorAction SilentlyContinue)) { Invoke-Expression (Invoke-WebRequest -UseBasicParsing https://bun.sh/install.ps1).Content }
+    - $env:Path = "$env:USERPROFILE\.bun\bin;$env:Path"
+
 # Build Stage
 build:
   stage: build
