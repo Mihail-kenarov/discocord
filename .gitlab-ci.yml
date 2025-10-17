@@ -7,8 +7,8 @@ stages:
 build:
   stage: build
   script:
-    - npm ci
-    - npm run build
+    - bun install --frozen-lockfile
+    - bun run build
   artifacts:
     paths:
     - node_modules/
@@ -19,8 +19,8 @@ test:
   stage: test
   image: cypress/browsers
   script:
-    - npm ci
-    - npx cypress run --browser chrome 
+    - bun install --frozen-lockfile
+    - bunx cypress run --browser chrome 
 
 # Deploy Stage
 deploy:
