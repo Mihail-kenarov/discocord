@@ -1,39 +1,57 @@
-# Step 1: Build the app
-FROM node:18-alpine AS builder
-
+FROM oven/bun:1 AS deps
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY package.json package-lock.json ./
-RUN npm install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
+FROM oven/bun:1 AS builder
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-#  accept build-time arg and expose as env var
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
 
-RUN npm run build
+ARG USE_PREBUILT=false
+RUN if [ "$USE_PREBUILT" = "true" ] && [ -d ".next" ] && [ -f ".next/BUILD_ID" ]; then \
+      echo "Using prebuilt .next output"; \
+    else \
+      bun run build; \
+    fi
 
-# Step 2: Run the app
-FROM node:18-alpine AS runner
-
+FROM oven/bun:1 AS production-deps
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy only the necessary files from the builder stage
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
-#  runtime env var still needs to exist, so keep it here too
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
 
 ARG CLERK_SECRET_KEY
-ENV CLERK_SECRET_KEY=$CLERK_SECRET_KEY
+ENV CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
 
 ARG CLERK_WEBHOOK_SIGNING_SECRET
-ENV CLERK_WEBHOOK_SIGNING_SECRET=$CLERK_WEBHOOK_SIGNING_SECRET
+ENV CLERK_WEBHOOK_SIGNING_SECRET=${CLERK_WEBHOOK_SIGNING_SECRET}
+
+COPY --from=production-deps /app/node_modules ./node_modules
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
