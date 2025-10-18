@@ -7,48 +7,45 @@ default:
   before_script:
     - if (-not (Get-Command bun -ErrorAction SilentlyContinue)) { Invoke-Expression (Invoke-WebRequest -UseBasicParsing https://bun.sh/install.ps1).Content }
     - $env:Path = "$env:USERPROFILE\.bun\bin;$env:Path"
-  cache:
-    key: "node-modules-$CI_COMMIT_REF_SLUG"
-    paths:
-      - node_modules/
-    policy: pull-push
 
-# Build Stage
 build:
   stage: build
   script:
     - bun install --frozen-lockfile
     - bun run build
   artifacts:
+    name: "next-artifacts-$CI_COMMIT_SHA"
     paths:
-    - .next/
+      - .next/
+    when: on_success
+    expire_in: 1 day
 
-
-# Test Stage
 test:
   stage: test
+  needs:
+    - build
   image: cypress/browsers
   script:
     - bun install --frozen-lockfile
-    - bunx cypress run --browser chrome 
+    - bunx cypress run --browser chrome
 
-# Deploy Stage
 deploy:
   stage: deploy
+  needs:
+    - build
   script:
     - if (-not (docker network ls --format "{{.Name}}" | Select-String -Pattern "^discocord_net$")) { docker network create discocord_net }
     - if (docker ps -a --filter "name=discocord_fe" | Select-String "discocord_fe") { docker rm -f discocord_fe }
     - if (docker images -q discocord_fe) { docker rmi -f discocord_fe }
 
-    # Build image with Clerk key available during build
     - docker build `
         --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" `
         --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY `
         --build-arg CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY `
         --build-arg CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET `
+        --build-arg USE_PREBUILT=true `
         -t discocord_fe .
 
-    # Run container with runtime secrets
     - docker run -d `
         --name discocord_fe `
         --network discocord_net `
