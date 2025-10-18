@@ -221,7 +221,6 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
   const normalizedFirstName = React.useMemo(() => {
     if (user.firstName) return user.firstName;
     return user.name?.split(/\s+/)[0] ?? "";
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.firstName, user.name]);
 
   const normalizedLastName = React.useMemo(() => {
@@ -252,4 +251,3 @@ function getInitials(name?: string) {
   const last = parts[1]?.[0] ?? "";
   return (first + last || first || "?").toUpperCase();
 }
-

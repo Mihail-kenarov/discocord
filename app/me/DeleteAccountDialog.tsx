@@ -45,7 +45,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
         </DialogHeader>
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">
-            Type '{requiredPhrase}' to confirm
+            Type &apos;{requiredPhrase}&apos; to confirm
           </p>
           <Input
             value={confirmText}
@@ -78,4 +78,3 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     </Dialog>
   );
 }
-
