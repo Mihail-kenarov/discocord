@@ -23,6 +23,7 @@ build:
     paths:
     - .next/
 
+
 # Test Stage
 test:
   stage: test
