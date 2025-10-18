@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, PenLine, Plus, Settings } from "lucide-react";
+import { Camera, PenLine, Plus, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -33,6 +33,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { useClerk, useUser } from "@clerk/nextjs";
 
 type Guild = {
   id: string | number;
@@ -185,12 +187,34 @@ type ProfileDialogBodyProps = {
 };
 
 function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
+  const { user: clerkUser } = useUser();
+  const { signOut } = useClerk();
+  const [deleting, setDeleting] = React.useState(false);
+  const [confirmText, setConfirmText] = React.useState("");
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const requiredPhrase = "Delete account";
+  const isConfirmValid = confirmText.trim() === requiredPhrase;
+
+  const emailFromClerk = clerkUser?.primaryEmailAddress?.emailAddress ?? user.email ?? "";
+
+  async function handleDeleteAccount() {
+    if (!clerkUser) return;
+    try {
+      setDeleting(true);
+      await clerkUser.delete();
+      await signOut({ redirectUrl: "/" });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const {
     username,
     setUsername,
     isEditingUsername,
     beginEditUsername,
     saveUsername,
+    isSavingUsername,
     hasUsernameChanges,
     canSaveUsername,
     usernameInputRef,
@@ -243,7 +267,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Email</p>
           <Input
-            value={user.email ?? ""}
+            value={emailFromClerk}
             disabled
             readOnly
             className="cursor-not-allowed opacity-80"
@@ -265,20 +289,76 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
         <Button
           type="button"
           onClick={saveUsername}
-          disabled={!canSaveUsername}
+          disabled={!canSaveUsername || isSavingUsername}
           className={cn(
             "w-full bg-emerald-500 text-white hover:bg-emerald-600",
-            !canSaveUsername && "opacity-70 hover:bg-emerald-500"
+            (!canSaveUsername || isSavingUsername) && "opacity-70 hover:bg-emerald-500"
           )}
         >
-          Save Changes
+          {isSavingUsername ? "Saving..." : "Save Changes"}
         </Button>
       )}
+
+      <Separator className="my-2" />
+
+      <Button
+        type="button"
+        variant="destructive"
+        className="w-full"
+        onClick={() => setConfirmOpen(true)}
+        disabled={!clerkUser || deleting}
+      >
+        <Trash2 className="size-4" />
+        Delete Account
+      </Button>
+
+      <Dialog open={confirmOpen} onOpenChange={(v) => { setConfirmOpen(v); if (!v) setConfirmText(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
+              This action is permanent and cannot be undone. Your account and associated data will be deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Type '{requiredPhrase}' to confirm
+            </p>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={requiredPhrase}
+              aria-invalid={confirmText.length > 0 && !isConfirmValid}
+              disabled={deleting}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={isConfirmValid ? "destructive" : "outline"}
+              onClick={handleDeleteAccount}
+              disabled={!isConfirmValid || deleting}
+            >
+              <Trash2 className="size-4" />
+              {deleting ? "Deleting..." : "Delete Account"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
+  const { user: clerkUser } = useUser();
   const fallbackUsername = React.useMemo(() => {
     if (user.username) return user.username;
     if (user.name) return user.name.replace(/\s+/g, "").toLowerCase();
@@ -289,6 +369,7 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
   const [username, setUsername] = React.useState(fallbackUsername);
   const [isEditingUsername, setIsEditingUsername] = React.useState(false);
   const usernameInputRef = React.useRef<HTMLInputElement>(null);
+  const [isSavingUsername, setIsSavingUsername] = React.useState(false);
 
   React.useEffect(() => {
     setInitialUsername(fallbackUsername);
@@ -318,12 +399,20 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
   const hasUsernameChanges = isEditingUsername && trimmedUsername !== initialUsername.trim();
   const canSaveUsername = hasUsernameChanges && trimmedUsername.length > 0;
 
-  const saveUsername = React.useCallback(() => {
+  const saveUsername = React.useCallback(async () => {
     if (!trimmedUsername) return;
-    setInitialUsername(trimmedUsername);
-    setUsername(trimmedUsername);
-    setIsEditingUsername(false);
-  }, [trimmedUsername]);
+    try {
+      setIsSavingUsername(true);
+      if (clerkUser) {
+        await clerkUser.update({ username: trimmedUsername });
+      }
+      setInitialUsername(trimmedUsername);
+      setUsername(trimmedUsername);
+      setIsEditingUsername(false);
+    } finally {
+      setIsSavingUsername(false);
+    }
+  }, [trimmedUsername, clerkUser]);
 
   const normalizedFirstName = React.useMemo(() => {
     if (user.firstName) return user.firstName;
@@ -342,6 +431,7 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
     isEditingUsername,
     beginEditUsername,
     saveUsername,
+    isSavingUsername,
     hasUsernameChanges,
     canSaveUsername,
     usernameInputRef,
