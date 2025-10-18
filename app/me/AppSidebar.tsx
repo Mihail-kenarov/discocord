@@ -136,6 +136,7 @@ export function AppSidebar({
   );
 }
 
+
 function getInitials(name?: string) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
