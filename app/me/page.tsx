@@ -33,12 +33,15 @@ export default async function MePage() {
   ];
 
   const displayName = user
-    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username || 'User'
+    ? user.username || 'User'
     : 'Guest';
 
   return (
     <SidebarProvider>
-      <AppSidebar guilds={guilds} user={{ name: displayName, imageUrl: user?.imageUrl }} />
+      <AppSidebar
+        guilds={guilds}
+        user={{ name: displayName, username: user?.username ?? null, imageUrl: user?.imageUrl }}
+      />
       <SidebarInset className="min-h-screen">
         <header className="flex h-14 items-center gap-2 border-b border-border px-4">
           <SidebarTrigger />

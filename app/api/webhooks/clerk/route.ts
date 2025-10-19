@@ -16,8 +16,6 @@ export async function POST(req: NextRequest) {
           clerkUserId: evt.data.id,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
-          firstName: evt.data.first_name,
-          lastName: evt.data.last_name,
           createdAt: evt.data.created_at,
         };
 
@@ -34,8 +32,6 @@ export async function POST(req: NextRequest) {
           clerkUserId: evt.data.id,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
-          firstName: evt.data.first_name,
-          lastName: evt.data.last_name,
           updatedAt: evt.data.updated_at,
         };
 

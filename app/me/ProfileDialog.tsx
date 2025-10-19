@@ -64,8 +64,6 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
     hasUsernameChanges,
     canSaveUsername,
     usernameInputRef,
-    normalizedFirstName,
-    normalizedLastName,
   } = editor;
 
   return (
@@ -86,7 +84,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
         </div>
         <div className="text-center">
           <p className="text-sm text-muted-foreground">Display name</p>
-          <p className="text-base font-medium">{user.name}</p>
+          <p className="text-base font-medium">{user.username}</p>
         </div>
       </div>
       <div className="space-y-4">
@@ -120,16 +118,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
             placeholder="No email available"
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">First name</p>
-            <Input value={normalizedFirstName} disabled readOnly className="cursor-not-allowed opacity-80" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Last name</p>
-            <Input value={normalizedLastName} disabled readOnly className="cursor-not-allowed opacity-80" />
-          </div>
-        </div>
+        {/* Removed first/last name fields */}
       </div>
       {hasUsernameChanges && (
         <Button
@@ -224,17 +213,6 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
     }
   }, [trimmedUsername, clerkUser, router]);
 
-  const normalizedFirstName = React.useMemo(() => {
-    if (user.firstName) return user.firstName;
-    return user.name?.split(/\s+/)[0] ?? "";
-  }, [user.firstName, user.name]);
-
-  const normalizedLastName = React.useMemo(() => {
-    if (user.lastName) return user.lastName;
-    const parts = user.name?.split(/\s+/) ?? [];
-    return parts.slice(1).join(" ");
-  }, [user.lastName, user.name]);
-
   return {
     username,
     setUsername,
@@ -245,8 +223,6 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
     hasUsernameChanges,
     canSaveUsername,
     usernameInputRef,
-    normalizedFirstName,
-    normalizedLastName,
   };
 }
 

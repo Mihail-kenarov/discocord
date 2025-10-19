@@ -98,11 +98,11 @@ export function AppSidebar({
           <div className="flex items-center justify-between gap-2 rounded-md bg-background/40 p-2">
             <div className="flex items-center gap-2">
               <Avatar className="size-8">
-                <AvatarImage src={user.imageUrl ?? undefined} alt={user.name} />
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                <AvatarImage src={user.imageUrl ?? undefined} alt={user.username} />
+                <AvatarFallback>{(user.username)}</AvatarFallback>
               </Avatar>
               <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm font-medium">{user.name}</span>
+                <span className="truncate text-sm font-medium">{user.username}</span>
               </div>
             </div>
             <DropdownMenu>
