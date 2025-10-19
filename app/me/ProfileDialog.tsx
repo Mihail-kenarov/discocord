@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { useUser } from "@clerk/nextjs";
 import type { AppSidebarUser } from "./types";
 import { DeleteAccountDialog } from "./DeleteAccountDialog";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type ProfileDialogProps = {
   user: AppSidebarUser;
@@ -163,6 +165,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
 
 function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
   const { user: clerkUser } = useUser();
+  const router = useRouter();
   const fallbackUsername = React.useMemo(() => {
     if (user.username) return user.username;
     if (user.name) return user.name.replace(/\s+/g, "").toLowerCase();
@@ -213,10 +216,13 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
       setInitialUsername(trimmedUsername);
       setUsername(trimmedUsername);
       setIsEditingUsername(false);
+      toast("Username changed successfully");
+      // Refresh server components so any server-fetched user info updates
+      router.refresh();
     } finally {
       setIsSavingUsername(false);
     }
-  }, [trimmedUsername, clerkUser]);
+  }, [trimmedUsername, clerkUser, router]);
 
   const normalizedFirstName = React.useMemo(() => {
     if (user.firstName) return user.firstName;

@@ -2,6 +2,8 @@ import { type Metadata } from 'next'
 import { ClerkProvider, SignedIn, UserButton } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
+import { Toaster } from "@/components/ui/sonner";
+import ToastListener from "@/components/ui/toast-listener";
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,6 +38,9 @@ export default function RootLayout({
               <UserButton />
             </div>
           </SignedIn>
+          {/* Global toast system */}
+          <Toaster richColors position="top-center" />
+          <ToastListener />
           {children}
         </body>
       </html>

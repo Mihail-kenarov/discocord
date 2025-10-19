@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type DeleteAccountDialogProps = {
   open: boolean;
@@ -14,6 +16,7 @@ type DeleteAccountDialogProps = {
 export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogProps) {
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
+  const router = useRouter();
   const [confirmText, setConfirmText] = React.useState("");
   const [deleting, setDeleting] = React.useState(false);
   const requiredPhrase = "Delete account";
@@ -25,12 +28,36 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
 
   async function handleDeleteAccount() {
     if (!clerkUser || !isConfirmValid) return;
+    setDeleting(true);
     try {
-      setDeleting(true);
       await clerkUser.delete();
-      await signOut({ redirectUrl: "/" });
+      if (typeof globalThis.window !== "undefined") {
+        globalThis.window.localStorage.setItem(
+          "globalToast",
+          JSON.stringify({ type: "success", message: "Account was deleted successfully" })
+        );
+      }
+    } catch (err) {
+      toast.error("Failed to delete account");
+      setDeleting(false);
+      return;
     } finally {
       setDeleting(false);
+    }
+    // Ensure redirect to home immediately after deletion
+    try {
+      router.replace("/");
+    } catch {
+      /* no-op */
+    }
+    if (typeof globalThis.window !== "undefined") {
+      globalThis.window.location.assign("/");
+    }
+    // Fire-and-forget sign out to clear any remaining session state
+    try {
+      void signOut({ redirectUrl: "/" });
+    } catch {
+      /* no-op */
     }
   }
 
