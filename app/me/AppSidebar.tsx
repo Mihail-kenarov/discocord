@@ -35,6 +35,7 @@ type AppSidebarProps = {
   className?: string;
 };
 
+
 export function AppSidebar({
   guilds,
   user,
