@@ -14,11 +14,7 @@ export interface ApiError {
   details?: unknown;
 }
 
-export interface CreateGuildPayload {
-  name: string;
-  ownerId: string;
-  iconUrl?: string | null;
-}
+
 
 function buildGatewayUrl(path: string): string {
   return `${BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
@@ -54,16 +50,23 @@ export async function getGatewayUserwithId<T = unknown>(id: string | number, sig
   return getGateway<T>(`/users/${id}`, signal);
 }
 
-export async function createGuild(payload: CreateGuildPayload, signal?: AbortSignal): Promise<Guild> {
-  try {
-    const url = buildGatewayUrl('/guilds');
-    const response = await axios.post<Guild>(url, payload, {
-      signal,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    return response.data;
-  } catch (err) {
-    throw toApiError(err as AxiosError);
+export async function createGuild(payload: {
+  name: string;
+  ownerId: string;
+  iconFile?: File | null;
+}): Promise<Guild> {
+  const form = new FormData();
+  form.append("name", payload.name);
+  form.append("ownerId", payload.ownerId);
+  if (payload.iconFile) {
+    form.append("icon", payload.iconFile);
   }
+
+  const url = buildGatewayUrl("/guilds");
+  const response = await axios.post<Guild>(url, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return response.data;
 }
+

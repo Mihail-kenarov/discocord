@@ -80,15 +80,11 @@ export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated 
 
       setIsSubmitting(true);
       try {
-        let iconUrl: string | null = null;
-        if (iconFile) {
-          iconUrl = await fileToBase64(iconFile);
-        }
         const guild = await createGuild({
-          name: trimmedName,
-          ownerId,
-          iconUrl,
-        });
+        name: trimmedName,
+        ownerId,
+        iconFile,
+      });
         toast.success(`Created ${guild.name}`);
         onGuildCreated?.(guild);
         resetForm();
