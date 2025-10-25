@@ -1,21 +1,94 @@
 import { currentUser } from '@clerk/nextjs/server';
-import { Suspense } from 'react';
-import { ClientGatewayButton } from './ClientGatewayButton';
-import { AppSidebar } from './AppSidebar';
-import { FriendsTabs, type Person } from './FriendsTabs';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import type { Person } from './FriendsTabs';
+import { MeClient } from './MeClient';
+import type { GuildWithChannels } from './types';
 
 // Server component wrapper to fetch user and render client portion
 export default async function MePage() {
   const user = await currentUser();
 
   // Sample data for now. Replace with gateway data when available.
-  const guilds = [
-    { id: 'g1', name: 'Gaming Squad' },
-    { id: 'g2', name: 'Dev Community' },
-    { id: 'g3', name: 'Music Lovers' },
-    { id: 'g4', name: 'Art Studio' },
-    { id: 'g5', name: 'Book Club' },
+  const guilds: GuildWithChannels[] = [
+    {
+      id: '1',
+      name: 'Gaming Squad',
+      ownerId: 'owner-1',
+      iconUrl: null,
+      channels: [
+        { id: 101, guildId: 1, name: 'general', position: 0 },
+        { id: 102, guildId: 1, name: 'strats', position: 1 },
+        { id: 201, guildId: 1, name: 'Lounge', position: 0 },
+      ],
+      messages: [
+        {
+          id: 'm-101',
+          channelId: 101,
+          author: { username: 'alex.m' },
+          timestamp: 'Today at 14:02',
+          content: 'Hey squad! Raid tonight at 8pm?',
+        },
+        {
+          id: 'm-102',
+          channelId: 101,
+          author: { username: 'jamie' },
+          timestamp: 'Today at 14:05',
+          content: 'Count me in. Need to restock potions before we jump in.',
+        },
+        {
+          id: 'm-103',
+          channelId: 102,
+          author: { username: 'morgan' },
+          timestamp: 'Yesterday at 21:14',
+          content: 'Uploaded the new boss positioning chart in the docs channel. Take a look before tonight.',
+        },
+      ],
+    },
+    {
+      id: '2',
+      name: 'Dev Community',
+      ownerId: 'owner-2',
+      iconUrl: null,
+      channels: [
+        { id: 301, guildId: 2, name: 'general', position: 0 },
+        { id: 302, guildId: 2, name: 'help-desk', position: 1 },
+        { id: 401, guildId: 2, name: 'Standup', position: 0 },
+      ],
+      messages: [
+        {
+          id: 'm-201',
+          channelId: 301,
+          author: { username: 'priya' },
+          timestamp: 'Today at 09:12',
+          content: 'New Next.js 15 RC just dropped. Anyone tried the server actions yet?',
+        },
+        {
+          id: 'm-202',
+          channelId: 302,
+          author: { username: 'leo' },
+          timestamp: 'Today at 09:34',
+          content: 'Stuck on a hydration mismatch error after upgrading. Sharing repro in a thread now.',
+        },
+      ],
+    },
+    {
+      id: '3',
+      name: 'Music Lovers',
+      ownerId: 'owner-3',
+      iconUrl: null,
+      channels: [
+        { id: 501, guildId: 3, name: 'general', position: 0 },
+        { id: 502, guildId: 3, name: 'song-recs', position: 1 },
+      ],
+      messages: [
+        {
+          id: 'm-301',
+          channelId: 502,
+          author: { username: 'sam' },
+          timestamp: 'Today at 08:03',
+          content: 'Highly recommend the new Glass Animals single - perfect morning vibes.',
+        },
+      ],
+    },
   ];
 
   const friends: Person[] = [
@@ -32,31 +105,21 @@ export default async function MePage() {
     { id: 'p3', name: 'Tom Anderson' },
   ];
 
-  const displayName = user
-    ? user.username || 'User'
-    : 'Guest';
+  const username = user?.username ?? 'guest';
+  const displayName = user?.username ?? 'Guest';
 
   return (
-    <SidebarProvider>
-      <AppSidebar
-        guilds={guilds}
-        user={{ name: displayName, username: user?.username ?? null, imageUrl: user?.imageUrl }}
-      />
-      <SidebarInset className="min-h-screen">
-        <header className="flex h-14 items-center gap-2 border-b border-border px-4">
-          <SidebarTrigger />
-          <h1 className="text-lg font-semibold">Friends</h1>
-        </header>
-        <main className="flex flex-col gap-4 p-4">
-          <FriendsTabs initialFriends={friends} initialPending={pending} />
-          <section className="pt-4">
-            <Suspense fallback={<div className="text-white/60 text-sm">Loading action...</div>}>
-              <ClientGatewayButton />
-            </Suspense>
-          </section>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <MeClient
+      guilds={guilds}
+      friends={friends}
+      pending={pending}
+      user={{
+        username,
+        displayName,
+        imageUrl: user?.imageUrl,
+        email: user?.primaryEmailAddress?.emailAddress ?? null,
+      }}
+    />
   );
 }
 

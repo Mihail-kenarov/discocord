@@ -15,9 +15,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@clerk/nextjs";
 import type { AppSidebarUser } from "./types";
-import { DeleteAccountDialog } from "./DeleteAccountDialog";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { DeleteAccountDialog } from "./DeleteAccountDialog";
 
 type ProfileDialogProps = {
   user: AppSidebarUser;
@@ -51,6 +51,7 @@ type ProfileDialogBodyProps = {
 function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
   const { user: clerkUser } = useUser();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const displayName = user.displayName ?? user.username;
 
   const emailFromClerk = clerkUser?.primaryEmailAddress?.emailAddress ?? user.email ?? "";
 
@@ -71,8 +72,10 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
       <div className="flex flex-col items-center gap-3">
         <div className="relative">
           <Avatar className="size-20 border border-border shadow-sm">
-            <AvatarImage src={user.imageUrl ?? undefined} alt={user.name} />
-            <AvatarFallback className="text-xl">{getInitials(user.name)}</AvatarFallback>
+            <AvatarImage src={user.imageUrl ?? undefined} alt={displayName} />
+            <AvatarFallback className="text-xl">
+              {user.username?.charAt(0)?.toUpperCase() ?? "?"}
+            </AvatarFallback>
           </Avatar>
           <button
             type="button"
@@ -84,7 +87,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
         </div>
         <div className="text-center">
           <p className="text-sm text-muted-foreground">Display name</p>
-          <p className="text-base font-medium">{user.username}</p>
+          <p className="text-base font-medium">{displayName}</p>
         </div>
       </div>
       <div className="space-y-4">
@@ -155,11 +158,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
 function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
   const { user: clerkUser } = useUser();
   const router = useRouter();
-  const fallbackUsername = React.useMemo(() => {
-    if (user.username) return user.username;
-    if (user.name) return user.name.replace(/\s+/g, "").toLowerCase();
-    return "";
-  }, [user.name, user.username]);
+  const fallbackUsername = React.useMemo(() => user.username, [user.username]);
 
   const [initialUsername, setInitialUsername] = React.useState(fallbackUsername);
   const [username, setUsername] = React.useState(fallbackUsername);
@@ -224,12 +223,4 @@ function useProfileEditor(user: AppSidebarUser, isOpen: boolean) {
     canSaveUsername,
     usernameInputRef,
   };
-}
-
-function getInitials(name?: string) {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts[1]?.[0] ?? "";
-  return (first + last || first || "?").toUpperCase();
 }

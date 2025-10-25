@@ -1,13 +1,36 @@
 export type Guild = {
-  id: string | number;
+  id: string;
   name: string;
   iconUrl?: string | null;
-  href?: string;
+  ownerId: string;
+};
+
+export type GuildChannel = {
+  id: number;
+  guildId: number;
+  name: string;
+  position: number;
+};
+
+export type GuildMessage = {
+  id: string;
+  channelId: GuildChannel["id"];
+  author: {
+    username: string;
+    avatarUrl?: string | null;
+  };
+  timestamp: string;
+  content: string;
+};
+
+export type GuildWithChannels = Guild & {
+  channels: GuildChannel[];
+  messages: GuildMessage[];
 };
 
 export type AppSidebarUser = {
-  name: string;
+  username: string;
+  displayName?: string | null;
   imageUrl?: string | null;
-  username?: string | null;
   email?: string | null;
 };
