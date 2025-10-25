@@ -110,10 +110,11 @@ export default async function MePage() {
 
   return (
     <MeClient
-      guilds={guilds}
+      initialGuilds={guilds}
       friends={friends}
       pending={pending}
       user={{
+        id: user?.id ?? 'guest',
         username,
         displayName,
         imageUrl: user?.imageUrl,

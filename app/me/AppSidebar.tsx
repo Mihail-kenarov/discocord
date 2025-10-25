@@ -37,6 +37,7 @@ type AppSidebarProps = {
   activeGuildId: Guild["id"] | null;
   onSelectHome: () => void;
   onSelectGuild: (id: Guild["id"]) => void;
+  onGuildCreated?: (guild: Guild) => void;
 };
 
 
@@ -47,6 +48,7 @@ export function AppSidebar({
   activeGuildId,
   onSelectHome,
   onSelectGuild,
+  onGuildCreated,
 }: AppSidebarProps) {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false);
   const [isCreateGuildDialogOpen, setIsCreateGuildDialogOpen] = React.useState(false);
@@ -60,7 +62,12 @@ export function AppSidebar({
 
   return (
     <>
-      <CreateGuildDialog open={isCreateGuildDialogOpen} onOpenChange={setIsCreateGuildDialogOpen} />
+      <CreateGuildDialog
+        open={isCreateGuildDialogOpen}
+        onOpenChange={setIsCreateGuildDialogOpen}
+        ownerId={user.id}
+        onGuildCreated={onGuildCreated}
+      />
       <ProfileDialog
         user={user}
         open={isProfileDialogOpen}

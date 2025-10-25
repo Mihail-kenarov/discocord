@@ -4,7 +4,7 @@ import * as React from "react";
 import { Suspense } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import type { AppSidebarUser, GuildChannel, GuildMessage, GuildWithChannels } from "./types";
+import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChannels } from "./types";
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
@@ -16,16 +16,21 @@ import { cn } from "@/lib/utils";
 
 type MeClientProps = {
   user: AppSidebarUser;
-  guilds: GuildWithChannels[];
+  initialGuilds: GuildWithChannels[];
   friends: Person[];
   pending: Person[];
 };
 
 type ActiveChannelState = Record<string, GuildChannel["id"]>;
 
-export function MeClient({ user, guilds, friends, pending }: MeClientProps) {
+export function MeClient({ user, initialGuilds, friends, pending }: MeClientProps) {
+  const [guilds, setGuilds] = React.useState<GuildWithChannels[]>(initialGuilds);
   const [selectedGuildId, setSelectedGuildId] = React.useState<string | null>(null);
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
+
+  React.useEffect(() => {
+    setGuilds(initialGuilds);
+  }, [initialGuilds]);
 
   const selectedGuild = React.useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
@@ -58,6 +63,21 @@ export function MeClient({ user, guilds, friends, pending }: MeClientProps) {
     setSelectedGuildId(guildId);
   }, []);
 
+  const handleGuildCreated = React.useCallback(
+    (guild: Guild) => {
+      setGuilds((previous) => [
+        ...previous,
+        {
+          ...guild,
+          channels: [],
+          messages: [],
+        },
+      ]);
+      setSelectedGuildId(guild.id);
+    },
+    []
+  );
+
   const handleSelectChannel = React.useCallback(
     (channelId: GuildChannel["id"]) => {
       if (!selectedGuild) return;
@@ -77,6 +97,7 @@ export function MeClient({ user, guilds, friends, pending }: MeClientProps) {
         activeGuildId={selectedGuildId}
         onSelectHome={handleSelectHome}
         onSelectGuild={handleSelectGuild}
+        onGuildCreated={handleGuildCreated}
       />
       <SidebarInset className="flex min-h-screen flex-col bg-[#080808] text-white">
         {selectedGuild ? (

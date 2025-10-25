@@ -11,20 +11,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Upload } from "lucide-react";
+import { createGuild, type ApiError } from "@/app/api/callsAPI";
+import type { Guild } from "./types";
+import { toast } from "sonner";
 
 type CreateGuildDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  ownerId: string;
+  onGuildCreated?: (guild: Guild) => void;
 };
 
-export function CreateGuildDialog({ open, onOpenChange }: CreateGuildDialogProps) {
+export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated }: CreateGuildDialogProps) {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [guildName, setGuildName] = React.useState("");
   const [iconPreview, setIconPreview] = React.useState<string | null>(null);
+  const [iconFile, setIconFile] = React.useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const resetForm = React.useCallback(() => {
     setGuildName("");
     setIconPreview(null);
+    setIconFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -47,7 +55,11 @@ export function CreateGuildDialog({ open, onOpenChange }: CreateGuildDialogProps
   const handleFileChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      setIconPreview(file ? URL.createObjectURL(file) : null);
+      setIconPreview((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return file ? URL.createObjectURL(file) : null;
+      });
+      setIconFile(file ?? null);
     },
     []
   );
@@ -57,12 +69,38 @@ export function CreateGuildDialog({ open, onOpenChange }: CreateGuildDialogProps
   }, []);
 
   const handleSubmit = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      // Integration with createGuild API will be wired up next.
-      onOpenChange(false);
+      if (isSubmitting) return;
+      const trimmedName = guildName.trim();
+      if (!trimmedName) {
+        toast.error("Server name is required.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        let iconUrl: string | null = null;
+        if (iconFile) {
+          iconUrl = await fileToBase64(iconFile);
+        }
+        const guild = await createGuild({
+          name: trimmedName,
+          ownerId,
+          iconUrl,
+        });
+        toast.success(`Created ${guild.name}`);
+        onGuildCreated?.(guild);
+        resetForm();
+        onOpenChange(false);
+      } catch (error) {
+        const apiError = error as ApiError;
+        toast.error(apiError.message || "Failed to create server");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [onOpenChange]
+    [guildName, iconFile, isSubmitting, onGuildCreated, onOpenChange, ownerId, resetForm]
   );
 
   return (
@@ -139,12 +177,22 @@ export function CreateGuildDialog({ open, onOpenChange }: CreateGuildDialogProps
             <Button
               type="submit"
               className="bg-emerald-500 text-black hover:bg-emerald-400 focus-visible:ring-emerald-500"
+              disabled={isSubmitting}
             >
-              Create Server
+              {isSubmitting ? "Creating..." : "Create Server"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
 }

@@ -29,6 +29,7 @@ export type GuildWithChannels = Guild & {
 };
 
 export type AppSidebarUser = {
+  id: string;
   username: string;
   displayName?: string | null;
   imageUrl?: string | null;
