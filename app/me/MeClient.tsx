@@ -12,7 +12,7 @@ import { getGuildById, listMyGuilds } from "@/app/api/callsAPI";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Hash, Paperclip, SendHorizontal, Smile } from "lucide-react";
+import { Hash, Paperclip, SendHorizontal, Smile, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -233,6 +233,7 @@ type GuildWorkspaceProps = {
 };
 
 function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorkspaceProps) {
+  const [showMembers, setShowMembers] = React.useState(true);
   const sortedChannels = React.useMemo(
     () => [...guild.channels].sort((a, b) => a.position - b.position),
     [guild.channels]
@@ -245,6 +246,19 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
     if (!activeChannel) return [] as GuildMessage[];
     return guild.messages.filter((message) => message.channelId === activeChannel.id);
   }, [guild.messages, activeChannel]);
+
+  const members = React.useMemo(() => {
+    const map = new Map<string, { username: string; avatarUrl?: string | null }>();
+    for (const m of guild.messages) {
+      if (!map.has(m.author.username)) {
+        map.set(m.author.username, {
+          username: m.author.username,
+          avatarUrl: m.author.avatarUrl ?? null,
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [guild.messages]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -260,6 +274,23 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
             </p>
             <p className="text-xs text-neutral-500">{guild.name}</p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            type="button"
+            onClick={() => setShowMembers((v) => !v)}
+            className={cn(
+              "text-neutral-400 hover:text-white",
+              showMembers && "text-emerald-300 hover:text-emerald-200"
+            )}
+            aria-pressed={showMembers}
+            aria-label="Toggle members panel"
+            title="Toggle members"
+          >
+            <Users className="size-5" />
+          </Button>
         </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
@@ -354,6 +385,28 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
             </form>
           </footer>
         </section>
+        {showMembers && (
+          <aside className="w-64 border-l border-white/10 bg-[#060606] px-3 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Members</p>
+            <ScrollArea className="mt-3 h-[calc(100%-2rem)] pr-2">
+              {members.length === 0 ? (
+                <p className="text-xs text-neutral-600">No members to show.</p>
+              ) : (
+                <div className="space-y-2">
+                  {members.map((m) => (
+                    <div key={m.username} className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-white/5">
+                      <Avatar className="size-8 border border-white/10">
+                        <AvatarImage src={m.avatarUrl ?? undefined} alt={m.username} />
+                        <AvatarFallback>{m.username?.charAt(0)?.toUpperCase() ?? "?"}</AvatarFallback>
+                      </Avatar>
+                      <span className="truncate text-sm text-neutral-200">{m.username}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </aside>
+        )}
       </div>
     </div>
   );

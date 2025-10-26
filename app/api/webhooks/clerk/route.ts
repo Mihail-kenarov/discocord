@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
           clerkUserId: evt.data.id,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
+          imageUrl: (evt.data as any).image_url ?? undefined,
           createdAt: evt.data.created_at,
         };
 
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
           clerkUserId: evt.data.id,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
+          imageUrl: (evt.data as any).image_url ?? undefined,
           updatedAt: evt.data.updated_at,
         };
 

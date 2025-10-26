@@ -35,3 +35,9 @@ export type AppSidebarUser = {
   imageUrl?: string | null;
   email?: string | null;
 };
+
+export type MemberUser = {
+  id: string;
+  username: string;
+  avatarUrl?: string | null;
+};
