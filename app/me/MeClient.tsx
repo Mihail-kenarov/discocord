@@ -181,7 +181,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   return (
     <SidebarProvider
       style={{
-        "--sidebar-width": "20rem",
+        "--sidebar-width": "18rem",
       } as React.CSSProperties}
     >
       <AppSidebar

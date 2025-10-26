@@ -41,11 +41,25 @@ function normalizeChannel(channel: ChannelResponse): GuildChannel {
   };
 }
 
+function isAbsoluteUrl(url: string) {
+  return /^(?:[a-z]+:)?\/\//i.test(url) || url.startsWith("data:");
+}
+
+function normalizeIconUrl(icon?: string | null): string | null {
+  if (!icon) return null;
+  const trimmed = icon.trim();
+  if (!trimmed) return null;
+  if (isAbsoluteUrl(trimmed)) return trimmed;
+  if (trimmed.startsWith("/gw/")) return trimmed;
+  if (trimmed.startsWith("/")) return `${BASE_URL}${trimmed}`; // e.g. /icons/x.png -> /gw/icons/x.png
+  return `${BASE_URL}/${trimmed}`; // e.g. icons/x.png -> /gw/icons/x.png
+}
+
 function normalizeGuildResponse(guild: GuildResponse): GuildWithChannels {
   return {
     id: String(guild.id),
     name: guild.name,
-    iconUrl: guild.iconUrl ?? guild.iconURL ?? null,
+    iconUrl: normalizeIconUrl(guild.iconUrl ?? guild.iconURL ?? null),
     ownerId: guild.ownerId !== undefined ? String(guild.ownerId) : guild.ownerID !== undefined ? String(guild.ownerID) : "",
     channels: (guild.channels ?? []).map(normalizeChannel),
     messages: guild.messages ?? []

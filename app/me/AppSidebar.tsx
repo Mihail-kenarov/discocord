@@ -100,15 +100,15 @@ export function AppSidebar({
                         type="button"
                         onClick={() => onSelectGuild(g.id)}
                         isActive={activeGuildId === g.id}
-                        className="h-auto flex-col items-center gap-3 p-3"
+                        className="h-16 items-center gap-4 p-2"
                       >
-                        <Avatar className="size-32 border border-white/10">
+                        <Avatar className="size-14 border border-white/10">
                           <AvatarImage src={g.iconUrl ?? undefined} alt={g.name} />
-                          <AvatarFallback className="text-4xl font-semibold">
+                          <AvatarFallback className="text-lg font-semibold">
                             {g.name?.charAt(0)?.toUpperCase() ?? "#"}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="w-full truncate text-center text-sm">{g.name}</span>
+                        <span className="truncate text-sm">{g.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
