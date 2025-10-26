@@ -8,13 +8,14 @@ import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChanne
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
-import { getGuildById, listMyGuilds } from "@/app/api/callsAPI";
+import { getGuildById, listMyGuilds, getGuildMembers, getUsersByIds } from "@/app/api/callsAPI";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Hash, Paperclip, SendHorizontal, Smile, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { MemberUser } from "./types";
 
 type MeClientProps = {
   user: AppSidebarUser;
@@ -234,6 +235,8 @@ type GuildWorkspaceProps = {
 
 function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorkspaceProps) {
   const [showMembers, setShowMembers] = React.useState(true);
+  const [members, setMembers] = React.useState<MemberUser[] | null>(null);
+  const [membersLoading, setMembersLoading] = React.useState(false);
   const sortedChannels = React.useMemo(
     () => [...guild.channels].sort((a, b) => a.position - b.position),
     [guild.channels]
@@ -247,18 +250,41 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
     return guild.messages.filter((message) => message.channelId === activeChannel.id);
   }, [guild.messages, activeChannel]);
 
-  const members = React.useMemo(() => {
-    const map = new Map<string, { username: string; avatarUrl?: string | null }>();
-    for (const m of guild.messages) {
-      if (!map.has(m.author.username)) {
-        map.set(m.author.username, {
-          username: m.author.username,
-          avatarUrl: m.author.avatarUrl ?? null,
-        });
+  React.useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const load = async () => {
+      setMembersLoading(true);
+      try {
+        const { data: idsData, error: idsErr } = await getGuildMembers(guild.id, controller.signal);
+        if (cancelled || controller.signal.aborted) return;
+        if (idsErr || !idsData) {
+          setMembers([]);
+          return;
+        }
+        const idsOrdered = Array.from(new Set([idsData.ownerId, ...idsData.memberIds].filter(Boolean)));
+        const { data: profiles, error: profErr } = await getUsersByIds(idsOrdered, controller.signal);
+        if (cancelled || controller.signal.aborted) return;
+        if (profErr || !profiles) {
+          setMembers([]);
+          return;
+        }
+        // Preserve the ordering by idsOrdered
+        const byId = new Map(profiles.map((p) => [p.id, p] as const));
+        const ordered = idsOrdered.map((id) => byId.get(id) ?? { id, username: id, avatarUrl: null });
+        setMembers(ordered);
+      } catch (e) {
+        if (!cancelled) setMembers([]);
+      } finally {
+        if (!cancelled) setMembersLoading(false);
       }
-    }
-    return Array.from(map.values());
-  }, [guild.messages]);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [guild.id]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -389,12 +415,21 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
           <aside className="w-64 border-l border-white/10 bg-[#060606] px-3 py-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Members</p>
             <ScrollArea className="mt-3 h-[calc(100%-2rem)] pr-2">
-              {members.length === 0 ? (
+              {membersLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-md px-2 py-1.5">
+                      <div className="size-8 rounded-full bg-white/10 animate-pulse" />
+                      <div className="h-4 w-28 rounded bg-white/10 animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              ) : !members || members.length === 0 ? (
                 <p className="text-xs text-neutral-600">No members to show.</p>
               ) : (
                 <div className="space-y-2">
                   {members.map((m) => (
-                    <div key={m.username} className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-white/5">
+                    <div key={m.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-white/5">
                       <Avatar className="size-8 border border-white/10">
                         <AvatarImage src={m.avatarUrl ?? undefined} alt={m.username} />
                         <AvatarFallback>{m.username?.charAt(0)?.toUpperCase() ?? "?"}</AvatarFallback>

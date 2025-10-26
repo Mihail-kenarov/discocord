@@ -4,7 +4,7 @@
 // const { data, error } = await getFromBackend('/health');
 
 import axios, { AxiosError } from 'axios';
-import type { Guild, GuildChannel, GuildMessage, GuildWithChannels } from '../me/types';
+import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
 
 const BASE_URL = '/gw'; // fixed per request; replace with env var when environments expand
 
@@ -156,5 +156,48 @@ export async function listMyGuilds(
   }
 
   const normalized = data.map(normalizeGuildResponse);
+  return { data: normalized, error: null };
+}
+
+// Fetch only IDs of guild members from guild service
+export async function getGuildMembers(
+  guildId: string | number,
+  signal?: AbortSignal
+): Promise<{ data: { ownerId: string; memberIds: string[] } | null; error: ApiError | null; }> {
+  const encodedId = encodeURIComponent(String(guildId));
+  const { data, error } = await getGateway<{
+    ownerId?: string | number;
+    ownerID?: string | number;
+    memberIds?: Array<string | number>;
+    memberIDs?: Array<string | number>;
+  }>(`/guilds/${encodedId}/members`, signal);
+
+  if (error || !data) return { data: null, error };
+
+  const owner = data.ownerId ?? data.ownerID ?? '';
+  const members = (data.memberIds ?? data.memberIDs ?? []).map((v) => String(v));
+  return { data: { ownerId: String(owner), memberIds: members }, error: null };
+}
+
+// Batch resolve users via user service
+export async function getUsersByIds(
+  ids: string[],
+  signal?: AbortSignal
+): Promise<{ data: MemberUser[] | null; error: ApiError | null; }> {
+  if (!ids || ids.length === 0) return { data: [], error: null };
+  const params = new URLSearchParams({ ids: ids.join(',') });
+  const { data, error } = await getGateway<Array<{
+    id: string;
+    username: string;
+    avatarUrl?: string | null;
+  }>>(`/users?${params.toString()}`, signal);
+
+  if (error || !data) return { data: null, error };
+
+  const normalized: MemberUser[] = data.map((u) => ({
+    id: String(u.id),
+    username: u.username,
+    avatarUrl: normalizeIconUrl(u.avatarUrl ?? null),
+  }));
   return { data: normalized, error: null };
 }
