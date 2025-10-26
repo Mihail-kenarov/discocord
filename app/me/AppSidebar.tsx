@@ -100,13 +100,15 @@ export function AppSidebar({
                         type="button"
                         onClick={() => onSelectGuild(g.id)}
                         isActive={activeGuildId === g.id}
-                        className="justify-start gap-3"
+                        className="h-auto flex-col items-center gap-3 p-3"
                       >
-                        <Avatar className="size-6">
+                        <Avatar className="size-32 border border-white/10">
                           <AvatarImage src={g.iconUrl ?? undefined} alt={g.name} />
-                          <AvatarFallback>{g.name?.charAt(0)?.toUpperCase() ?? "#"}</AvatarFallback>
+                          <AvatarFallback className="text-4xl font-semibold">
+                            {g.name?.charAt(0)?.toUpperCase() ?? "#"}
+                          </AvatarFallback>
                         </Avatar>
-                        <span className="truncate">{g.name}</span>
+                        <span className="w-full truncate text-center text-sm">{g.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
