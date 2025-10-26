@@ -8,11 +8,13 @@ import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChanne
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
+import { getGuildById, listMyGuilds } from "@/app/api/callsAPI";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Hash, Paperclip, SendHorizontal, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type MeClientProps = {
   user: AppSidebarUser;
@@ -27,10 +29,78 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   const [guilds, setGuilds] = React.useState<GuildWithChannels[]>(initialGuilds);
   const [selectedGuildId, setSelectedGuildId] = React.useState<string | null>(null);
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
+  const [loadingGuildId, setLoadingGuildId] = React.useState<string | null>(null);
+
+  const refreshGuildById = React.useCallback(async (guildId: string) => {
+    if (!guildId) return;
+    setLoadingGuildId((current) => (current === guildId ? current : guildId));
+    try {
+      const { data, error } = await getGuildById(guildId);
+      if (error || !data) {
+        if (error && error.message) {
+          toast.error(error.message);
+        }
+        return;
+      }
+      setGuilds((previous) => {
+        const index = previous.findIndex((guild) => guild.id === data.id);
+        if (index === -1) {
+          return [...previous, data];
+        }
+        const next = [...previous];
+        next[index] = data;
+        return next;
+      });
+    } catch (error) {
+      console.error(`[MeClient] Failed to load guild ${guildId}`, error);
+      toast.error("Failed to load server details.");
+    } finally {
+      setLoadingGuildId((current) => (current === guildId ? null : current));
+    }
+  }, []);
 
   React.useEffect(() => {
     setGuilds(initialGuilds);
   }, [initialGuilds]);
+
+  React.useEffect(() => {
+    if (!user.id) return;
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const loadGuilds = async () => {
+      try {
+        const { data, error } = await listMyGuilds(user.id, controller.signal);
+        if (cancelled || controller.signal.aborted) return;
+        if (error) {
+          toast.error(error.message ?? "Failed to load your servers.");
+          setGuilds([]);
+          return;
+        }
+        if (data) {
+          setGuilds(data);
+          setSelectedGuildId((current) => current ?? (data[0]?.id ?? null));
+          const firstGuild = data[0];
+          if (firstGuild && firstGuild.channels.length === 0) {
+            void refreshGuildById(firstGuild.id);
+          }
+        }
+      } catch (error) {
+        if (!cancelled && !controller.signal.aborted) {
+          console.error("[MeClient] Failed to load guilds", error);
+          toast.error("Failed to load your servers.");
+          setGuilds([]);
+        }
+      }
+    };
+
+    void loadGuilds();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [user.id, refreshGuildById]);
 
   const selectedGuild = React.useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
@@ -59,9 +129,16 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     setSelectedGuildId(null);
   }, []);
 
-  const handleSelectGuild = React.useCallback((guildId: string) => {
-    setSelectedGuildId(guildId);
-  }, []);
+  const handleSelectGuild = React.useCallback(
+    (guildId: string) => {
+      setSelectedGuildId(guildId);
+      const guild = guilds.find((g) => g.id === guildId);
+      if (guild && guild.channels.length > 0) return;
+      if (loadingGuildId === guildId) return;
+      void refreshGuildById(guildId);
+    },
+    [guilds, loadingGuildId, refreshGuildById]
+  );
 
   const handleGuildCreated = React.useCallback(
     (guild: Guild) => {
@@ -74,9 +151,21 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
         },
       ]);
       setSelectedGuildId(guild.id);
+      if (loadingGuildId !== guild.id) {
+        void refreshGuildById(guild.id);
+      }
     },
-    []
+    [loadingGuildId, refreshGuildById]
   );
+
+  React.useEffect(() => {
+    if (!selectedGuildId) return;
+    const guild = guilds.find((g) => g.id === selectedGuildId);
+    if (!guild) return;
+    if (guild.channels.length > 0) return;
+    if (loadingGuildId === selectedGuildId) return;
+    void refreshGuildById(selectedGuildId);
+  }, [guilds, loadingGuildId, refreshGuildById, selectedGuildId]);
 
   const handleSelectChannel = React.useCallback(
     (channelId: GuildChannel["id"]) => {

@@ -4,7 +4,7 @@
 // const { data, error } = await getFromBackend('/health');
 
 import axios, { AxiosError } from 'axios';
-import type { Guild } from '../me/types';
+import type { Guild, GuildChannel, GuildMessage, GuildWithChannels } from '../me/types';
 
 const BASE_URL = '/gw'; // fixed per request; replace with env var when environments expand
 
@@ -14,6 +14,43 @@ export interface ApiError {
   details?: unknown;
 }
 
+type ChannelResponse = {
+  id: number | string;
+  guildId: number | string;
+  name: string;
+  position: number | string;
+};
+
+type GuildResponse = {
+  id: string | number;
+  name: string;
+  iconUrl?: string | null;
+  iconURL?: string | null;
+  ownerId?: string | number;
+  ownerID?: string | number;
+  channels?: ChannelResponse[];
+  messages?: GuildMessage[];
+};
+
+function normalizeChannel(channel: ChannelResponse): GuildChannel {
+  return {
+    id: Number(channel.id),
+    guildId: Number(channel.guildId),
+    name: channel.name,
+    position: Number(channel.position),
+  };
+}
+
+function normalizeGuildResponse(guild: GuildResponse): GuildWithChannels {
+  return {
+    id: String(guild.id),
+    name: guild.name,
+    iconUrl: guild.iconUrl ?? guild.iconURL ?? null,
+    ownerId: guild.ownerId !== undefined ? String(guild.ownerId) : guild.ownerID !== undefined ? String(guild.ownerID) : "",
+    channels: (guild.channels ?? []).map(normalizeChannel),
+    messages: guild.messages ?? []
+  };
+}
 
 
 function buildGatewayUrl(path: string): string {
@@ -70,3 +107,40 @@ export async function createGuild(payload: {
   return response.data;
 }
 
+export async function getGuildById(
+  id: string | number,
+  signal?: AbortSignal
+): Promise<{ data: GuildWithChannels | null; error: ApiError | null; }> {
+  const encodedId = encodeURIComponent(String(id));
+  const { data, error } = await getGateway<GuildResponse>(`/guilds/${encodedId}`, signal);
+
+  if (error || !data) {
+    return { data: null, error };
+  }
+
+  const normalized = normalizeGuildResponse(data);
+
+  return { data: normalized, error: null };
+}
+
+export async function listMyGuilds(
+  userId: string,
+  signal?: AbortSignal
+): Promise<{ data: GuildWithChannels[] | null; error: ApiError | null; }> {
+  if (!userId) {
+    return {
+      data: null,
+      error: { message: "userId is required to list guilds" }
+    };
+  }
+
+  const params = new URLSearchParams({ userId });
+  const { data, error } = await getGateway<GuildResponse[]>(`/my/guilds?${params.toString()}`, signal);
+
+  if (error || !data) {
+    return { data: null, error };
+  }
+
+  const normalized = data.map(normalizeGuildResponse);
+  return { data: normalized, error: null };
+}
