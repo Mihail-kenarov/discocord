@@ -1,6 +1,14 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
 
+function getImageUrl(data: unknown): string | undefined {
+  if (data && typeof data === "object" && "image_url" in data) {
+    const value = (data as { image_url?: unknown }).image_url;
+    return typeof value === "string" ? value : undefined;
+  }
+  return undefined;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const evt = await verifyWebhook(req);
@@ -16,7 +24,7 @@ export async function POST(req: NextRequest) {
           clerkUserId: evt.data.id,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
-          imageUrl: (evt.data as any).image_url ?? undefined,
+          imageUrl: getImageUrl(evt.data),
           createdAt: evt.data.created_at,
         };
 
@@ -33,7 +41,7 @@ export async function POST(req: NextRequest) {
           clerkUserId: evt.data.id,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
-          imageUrl: (evt.data as any).image_url ?? undefined,
+          imageUrl: getImageUrl(evt.data),
           updatedAt: evt.data.updated_at,
         };
 
