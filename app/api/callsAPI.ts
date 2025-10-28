@@ -189,7 +189,7 @@ export async function getUsersByIds(
   const { data, error } = await getGateway<Array<{
     id: string;
     username: string;
-    avatarUrl?: string | null;
+    imageUrl?: string | null;
   }>>(`/users?${params.toString()}`, signal);
 
   if (error || !data) return { data: null, error };
@@ -197,7 +197,7 @@ export async function getUsersByIds(
   const normalized: MemberUser[] = data.map((u) => ({
     id: String(u.id),
     username: u.username,
-    avatarUrl: normalizeIconUrl(u.avatarUrl ?? null),
+    imageUrl: normalizeIconUrl(u.imageUrl ?? null),
   }));
   return { data: normalized, error: null };
 }

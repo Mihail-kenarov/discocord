@@ -271,7 +271,7 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
         }
         // Preserve the ordering by idsOrdered
         const byId = new Map(profiles.map((p) => [p.id, p] as const));
-        const ordered = idsOrdered.map((id) => byId.get(id) ?? { id, username: id, avatarUrl: null });
+        const ordered = idsOrdered.map((id) => byId.get(id) ?? { id, username: id, imageUrl: null });
         setMembers(ordered);
       } catch (e) {
         if (!cancelled) setMembers([]);
@@ -431,7 +431,7 @@ function GuildWorkspace({ guild, activeChannelId, onSelectChannel }: GuildWorksp
                   {members.map((m) => (
                     <div key={m.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-white/5">
                       <Avatar className="size-8 border border-white/10">
-                        <AvatarImage src={m.avatarUrl ?? undefined} alt={m.username} />
+                        <AvatarImage src={m.imageUrl ?? undefined} alt={m.username} />
                         <AvatarFallback>{m.username?.charAt(0)?.toUpperCase() ?? "?"}</AvatarFallback>
                       </Avatar>
                       <span className="truncate text-sm text-neutral-200">{m.username}</span>
@@ -451,7 +451,7 @@ function MessageRow({ message }: { message: GuildMessage }) {
   return (
     <div className="flex items-start gap-4">
       <Avatar className="size-10 border border-white/5">
-        <AvatarImage src={message.author.avatarUrl ?? undefined} alt={message.author.username} />
+        <AvatarImage src={message.author.imageUrl ?? undefined} alt={message.author.username} />
         <AvatarFallback>{message.author.username?.charAt(0)?.toUpperCase() ?? "?"}</AvatarFallback>
       </Avatar>
       <div className="flex flex-col gap-1">

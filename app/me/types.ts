@@ -17,7 +17,7 @@ export type GuildMessage = {
   channelId: GuildChannel["id"];
   author: {
     username: string;
-    avatarUrl?: string | null;
+    imageUrl?: string | null;
   };
   timestamp: string;
   content: string;
@@ -39,5 +39,5 @@ export type AppSidebarUser = {
 export type MemberUser = {
   id: string;
   username: string;
-  avatarUrl?: string | null;
+  imageUrl?: string | null;
 };
