@@ -190,6 +190,7 @@ export async function getUsersByIds(
     id: string;
     username: string;
     imageUrl?: string | null;
+    avatarUrl?: string | null;
   }>>(`/users?${params.toString()}`, signal);
 
   if (error || !data) return { data: null, error };
@@ -197,7 +198,7 @@ export async function getUsersByIds(
   const normalized: MemberUser[] = data.map((u) => ({
     id: String(u.id),
     username: u.username,
-    imageUrl: normalizeIconUrl(u.imageUrl ?? null),
+    imageUrl: normalizeIconUrl(u.imageUrl ?? u.avatarUrl ?? null),
   }));
   return { data: normalized, error: null };
 }
