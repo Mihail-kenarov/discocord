@@ -31,7 +31,8 @@ export default function RootLayout({
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
       <html lang="en" className="dark">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}> {/* use tokens from globals.css for theming */}
-        
+          <Toaster richColors position="top-center" />
+          <ToastListener />
           {children}
         </body>
       </html>
