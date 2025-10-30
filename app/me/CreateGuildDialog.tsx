@@ -171,6 +171,7 @@ export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated 
               Back
             </Button>
             <Button
+              data-cy="create-server-submit"
               type="submit"
               className="bg-emerald-500 text-black hover:bg-emerald-400 focus-visible:ring-emerald-500"
               disabled={isSubmitting}

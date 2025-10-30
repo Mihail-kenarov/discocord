@@ -95,6 +95,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
           <p className="text-sm font-medium text-muted-foreground">Username</p>
           <div className="relative flex items-center">
             <Input
+              data-cy="profile-username-input"
               ref={usernameInputRef}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
@@ -105,6 +106,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
               type="button"
               onClick={beginEditUsername}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
+              data-cy="edit-username"
               aria-label={isEditingUsername ? "Editing username" : "Edit username"}
             >
               <PenLine className="size-4" />
@@ -132,6 +134,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
             "w-full bg-emerald-500 text-white hover:bg-emerald-600",
             (!canSaveUsername || isSavingUsername) && "opacity-70 hover:bg-emerald-500"
           )}
+          data-cy="profile-save-username"
         >
           {isSavingUsername ? "Saving..." : "Save Changes"}
         </Button>
@@ -145,6 +148,7 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
         className="w-full"
         onClick={() => setConfirmOpen(true)}
         disabled={!clerkUser}
+        data-cy="delete-account-button"
       >
         <Trash2 className="size-4" />
         Delete Account

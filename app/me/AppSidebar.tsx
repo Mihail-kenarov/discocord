@@ -96,12 +96,12 @@ export function AppSidebar({
                 <SidebarMenu>
                   {guilds.map((g) => (
                     <SidebarMenuItem key={g.id}>
-                      <SidebarMenuButton
-                        type="button"
-                        onClick={() => onSelectGuild(g.id)}
-                        isActive={activeGuildId === g.id}
-                        className="h-14 items-center gap-4 p-2"
-                      >
+                    <SidebarMenuButton
+                      type="button"
+                      onClick={() => onSelectGuild(g.id)}
+                      isActive={activeGuildId === g.id}
+                      className="h-14 items-center gap-4 p-2"
+                    >
                         <Avatar className="size-12 border border-white/10">
                           <AvatarImage className="object-cover object-center" src={g.iconUrl ?? undefined} alt={g.name} />
                           <AvatarFallback className="text-base font-semibold">
@@ -121,6 +121,7 @@ export function AppSidebar({
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton
+                      data-cy="create-server-button"
                       type="button"
                       onClick={() => setIsCreateGuildDialogOpen(true)}
                       className="justify-start gap-2 bg-emerald-500 text-black transition hover:bg-emerald-400 focus-visible:ring-emerald-500"
@@ -147,13 +148,13 @@ export function AppSidebar({
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="outline" className="shrink-0">
+                  <Button size="icon" variant="outline" className="shrink-0" data-cy="user-menu-trigger">
                     <Settings className="size-4" />
                     <span className="sr-only">Open user menu</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onSelect={() => setIsProfileDialogOpen(true)}>
+                  <DropdownMenuItem onSelect={() => setIsProfileDialogOpen(true)} data-cy="view-profile-item">
                     View profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
