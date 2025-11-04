@@ -27,7 +27,7 @@ test:
   image: cypress/browsers
   script:
     - bun install --frozen-lockfile
-    - bunx cypress run --browser chrome
+    - bun run test:e2e
 
 deploy:
   stage: deploy

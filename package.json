@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cy:run": "cypress run --browser chrome",
+    "test:e2e": "start-server-and-test start http://localhost:3000 cy:run",
+    "test:e2e:dev": "start-server-and-test dev http://localhost:3000 cy:run"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.32.0",
@@ -38,6 +41,7 @@
     "cypress": "^15.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "start-server-and-test": "^2.0.8",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5"
