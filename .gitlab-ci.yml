@@ -13,10 +13,13 @@ build:
   script:
     - bun install --frozen-lockfile
     - bun run build
+    - if (Test-Path prebuilt.zip) { Remove-Item prebuilt.zip }
+    - Compress-Archive -Path .next -DestinationPath prebuilt.zip -Force
+    - Remove-Item -Recurse -Force .next
   artifacts:
     name: "next-artifacts-$CI_COMMIT_SHA"
     paths:
-      - .next/
+      - prebuilt.zip
     when: on_success
     expire_in: 1 day
 
@@ -26,14 +29,17 @@ test:
     - build
   image: cypress/browsers
   script:
+    - if (Test-Path prebuilt.zip) { Expand-Archive -Path prebuilt.zip -DestinationPath . -Force }
     - bun install --frozen-lockfile
     - bun run test:e2e
+    - if (Test-Path .next) { Remove-Item -Recurse -Force .next }
 
 deploy:
   stage: deploy
   needs:
     - build
   script:
+    - if (Test-Path prebuilt.zip) { Expand-Archive -Path prebuilt.zip -DestinationPath . -Force }
     - if (-not (docker network ls --format "{{.Name}}" | Select-String -Pattern "^discocord_net$")) { docker network create discocord_net }
     - if (docker ps -a --filter "name=discocord_fe" | Select-String "discocord_fe") { docker rm -f discocord_fe }
     - if (docker images -q discocord_fe) { docker rmi -f discocord_fe }
@@ -54,3 +60,4 @@ deploy:
         -e CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY `
         -e CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET `
         discocord_fe
+    - if (Test-Path .next) { Remove-Item -Recurse -Force .next }
