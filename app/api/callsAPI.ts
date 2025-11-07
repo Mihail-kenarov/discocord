@@ -32,6 +32,20 @@ type GuildResponse = {
   messages?: GuildMessage[];
 };
 
+// Raw message response shapes from chat service
+type MessageResponseRaw = {
+  id: string;
+  channel_id: number | string;
+  author_id: string;
+  content: string;
+  created_at: string; // RFC3339
+};
+
+type GetMessagesResponseRaw = {
+  channel_id: number | string;
+  messages: MessageResponseRaw[];
+};
+
 function normalizeChannel(channel: ChannelResponse): GuildChannel {
   return {
     id: Number(channel.id),
@@ -201,4 +215,57 @@ export async function getUsersByIds(
     imageUrl: normalizeIconUrl(u.imageUrl ?? u.avatarUrl ?? null),
   }));
   return { data: normalized, error: null };
+}
+
+// Create a message in a channel
+export async function postChannelMessage(
+  channelId: number | string,
+  payload: { authorId: string; content: string }
+): Promise<{ data: MessageResponseRaw | null; error: ApiError | null; }> {
+  try {
+    const url = buildGatewayUrl(`/channels/${encodeURIComponent(String(channelId))}/messages`);
+    const body = { author_id: payload.authorId, content: payload.content } as const;
+    const response = await axios.post<MessageResponseRaw>(url, body);
+    return { data: response.data, error: null };
+  } catch (err) {
+    return { data: null, error: toApiError(err as AxiosError) };
+  }
+}
+
+// Fetch messages for a channel and enrich with author profiles
+export async function getChannelMessages(
+  channelId: number | string,
+  options?: { limit?: number; before?: string | number },
+  signal?: AbortSignal
+): Promise<{ data: GuildMessage[] | null; error: ApiError | null; }> {
+  try {
+    const params = new URLSearchParams();
+    if (options?.limit && options.limit > 0) params.set('limit', String(options.limit));
+    if (options?.before) params.set('before', String(options.before));
+    const url = buildGatewayUrl(`/channels/${encodeURIComponent(String(channelId))}/messages${params.toString() ? `?${params.toString()}` : ''}`);
+    const response = await axios.get<GetMessagesResponseRaw>(url, { signal });
+    const raw = response.data;
+    const authorIds = Array.from(new Set(raw.messages.map((m) => m.author_id)));
+    const { data: users } = await getUsersByIds(authorIds, signal);
+    const byId = new Map((users ?? []).map((u) => [u.id, u] as const));
+
+    const normalized: GuildMessage[] = raw.messages.map((m) => {
+      const profile = byId.get(String(m.author_id));
+      const date = new Date(m.created_at);
+      return {
+        id: String(m.id),
+        channelId: Number(m.channel_id),
+        author: {
+          username: profile?.username ?? String(m.author_id),
+          imageUrl: profile?.imageUrl ?? null,
+        },
+        timestamp: isNaN(date.getTime()) ? String(m.created_at) : date.toLocaleString(),
+        content: m.content,
+      };
+    });
+
+    return { data: normalized, error: null };
+  } catch (err) {
+    return { data: null, error: toApiError(err as AxiosError) };
+  }
 }
