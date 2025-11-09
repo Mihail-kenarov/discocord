@@ -4,22 +4,21 @@ stages:
   - deploy
 
 default:
+  image: oven/bun:1
+  tags:
+    - docker          # 👈 ensures all jobs use your Docker runner by default
   before_script:
-    - if (-not (Get-Command bun -ErrorAction SilentlyContinue)) { Invoke-Expression (Invoke-WebRequest -UseBasicParsing https://bun.sh/install.ps1).Content }
-    - $env:Path = "$env:USERPROFILE\.bun\bin;$env:Path"
+    - bun --version
 
 build:
   stage: build
   script:
     - bun install --frozen-lockfile
     - bun run build
-    - if (Test-Path prebuilt.zip) { Remove-Item prebuilt.zip }
-    - Compress-Archive -Path .next -DestinationPath prebuilt.zip -Force
-    - Remove-Item -Recurse -Force .next
   artifacts:
     name: "next-artifacts-$CI_COMMIT_SHA"
     paths:
-      - prebuilt.zip
+      - .next/
     when: on_success
     expire_in: 1 day
 
@@ -27,37 +26,49 @@ test:
   stage: test
   needs:
     - build
-  image: cypress/browsers
+  image: cypress/browsers:node-20.9.0-chrome-118
+  tags:
+    - docker          # 👈 optional here (already inherited from default, but explicit is fine)
+  variables:
+    BUN_INSTALL: "/root/.bun"
+  before_script:
+    - apt-get update && apt-get install -y curl
+    - curl -fsSL https://bun.sh/install | bash
+    - export PATH="$BUN_INSTALL/bin:$PATH"
+    - bun --version
   script:
-    - if (Test-Path prebuilt.zip) { Expand-Archive -Path prebuilt.zip -DestinationPath . -Force }
     - bun install --frozen-lockfile
     - bun run test:e2e
-    - if (Test-Path .next) { Remove-Item -Recurse -Force .next }
 
 deploy:
   stage: deploy
   needs:
     - build
+  image: docker:24.0.5
+  tags:
+    - docker          # 👈 explicitly ensures Docker runner
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  before_script: []
   script:
-    - if (Test-Path prebuilt.zip) { Expand-Archive -Path prebuilt.zip -DestinationPath . -Force }
-    - if (-not (docker network ls --format "{{.Name}}" | Select-String -Pattern "^discocord_net$")) { docker network create discocord_net }
-    - if (docker ps -a --filter "name=discocord_fe" | Select-String "discocord_fe") { docker rm -f discocord_fe }
-    - if (docker images -q discocord_fe) { docker rmi -f discocord_fe }
-
-    - docker build `
-        --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" `
-        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY `
-        --build-arg CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY `
-        --build-arg CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET `
-        --build-arg USE_PREBUILT=true `
+    - docker network inspect discocord_net >/dev/null 2>&1 || docker network create discocord_net
+    - if [ "$(docker ps -aq -f name=discocord_fe)" ]; then docker rm -f discocord_fe; fi
+    - if [ "$(docker images -q discocord_fe)" ]; then docker rmi -f discocord_fe; fi
+    - docker build \
+        --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" \
+        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
+        --build-arg CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
+        --build-arg CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET" \
+        --build-arg USE_PREBUILT=true \
         -t discocord_fe .
-
-    - docker run -d `
-        --name discocord_fe `
-        --network discocord_net `
-        -p 3300:3000 `
-        -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY `
-        -e CLERK_SECRET_KEY=$env:CLERK_SECRET_KEY `
-        -e CLERK_WEBHOOK_SIGNING_SECRET=$env:CLERK_WEBHOOK_SIGNING_SECRET `
+    - docker run -d \
+        --name discocord_fe \
+        --network discocord_net \
+        -p 3300:3000 \
+        -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
+        -e CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
+        -e CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET" \
         discocord_fe
-    - if (Test-Path .next) { Remove-Item -Recurse -Force .next }
