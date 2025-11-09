@@ -40,8 +40,8 @@ test:
   script:
    
     - bun run build
-    - sleep 10
-
+    - bun run dev &
+    - sleep 10   # wait for the server to start
     - bun run cy:run
 
 deploy:
