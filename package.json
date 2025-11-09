@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "node .next/standalone/server.js",
-    "lint": "eslint",
-    "cy:run": "cypress run --browser chrome",
-    "test:e2e": "start-server-and-test start http-get://localhost:3000/favicon.ico cy:run",
-    "test:e2e:dev": "start-server-and-test dev http-get://localhost:3000/favicon.ico cy:run"
-  },
+  "dev": "next dev --turbopack",
+  "build": "next build --turbopack",
+  "start": "next start -H 0.0.0.0 -p 3000",
+  "lint": "eslint",
+  "cy:run": "cypress run --browser chrome",
+  "test:e2e": "start-server-and-test start http-get://localhost:3000/favicon.ico cy:run --timeout 300000",
+  "test:e2e:dev": "start-server-and-test dev http-get://localhost:3000/favicon.ico cy:run --timeout 300000"
+},
   "dependencies": {
     "@clerk/nextjs": "^6.32.0",
     "@radix-ui/react-avatar": "^1.1.10",
