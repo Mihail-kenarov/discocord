@@ -31,31 +31,16 @@ test:
     - docker
   variables:
     BUN_INSTALL: "/root/.bun"
-  before_script:
-    - apt-get update && apt-get install -y curl
-    - curl -fsSL https://bun.sh/install | bash
-    - export PATH="$BUN_INSTALL/bin:$PATH"
-    - bun --version
-    - bun install --frozen-lockfile
+  # before_script:
+  #   - apt-get update && apt-get install -y curl
+  #   - curl -fsSL https://bun.sh/install | bash
+  #   - export PATH="$BUN_INSTALL/bin:$PATH"
+  #   - bun --version
+  #   - bun install --frozen-lockfile
   script:
-    # 🧱 Build your Next.js app if not done already
+   
     - bun run build
-
-    # 🚀 Start the app in the background
-    - node .next/standalone/server.js &
-
-    # 🕒 Wait until the server responds (max ~90 s)
-    - n=0
-      until curl -s http://localhost:3000/favicon.ico > /dev/null;
-      do
-        if [ $n -ge 30 ]; then
-          echo " Server did not start in time"
-          exit 1
-        fi
-        n=$((n+1))
-        echo " Waiting for server (attempt $n)..."
-        sleep 3
-      done
+    - sleep 10
 
     - bun run cy:run
 
