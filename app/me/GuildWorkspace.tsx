@@ -107,7 +107,7 @@ export function GuildWorkspace({
   }, [guild.id]);
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 min-h-0 flex-col">
       <header className="flex h-14 items-center justify-between border-b border-white/10 bg-[#0c0c0c] px-4">
         <div className="flex items-center gap-3">
           <SidebarTrigger />
@@ -139,7 +139,7 @@ export function GuildWorkspace({
           </Button>
         </div>
       </header>
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <ChannelSidebar
           channels={sortedChannels}
           activeChannelId={activeChannel?.id ?? null}
@@ -296,7 +296,7 @@ function ChannelChat({ guildId, channel, messages, onSendMessage }: ChannelChatP
   const canSend = Boolean(channel) && (!!draft.trim() || Boolean(attachment));
 
   return (
-    <section className="flex flex-1 flex-col bg-[#0b0b0b]">
+    <section className="flex flex-1 min-h-0 flex-col bg-[#0b0b0b]">
       <ScrollArea className="flex-1">
         <MessageHistory channel={channel} messages={messages} />
       </ScrollArea>
