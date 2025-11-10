@@ -297,7 +297,7 @@ function ChannelChat({ guildId, channel, messages, onSendMessage }: ChannelChatP
 
   return (
     <section className="flex flex-1 min-h-0 flex-col bg-[#0b0b0b]">
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <MessageHistory channel={channel} messages={messages} />
       </ScrollArea>
       <footer className="border-t border-white/10 bg-black/60 px-4 py-4">
