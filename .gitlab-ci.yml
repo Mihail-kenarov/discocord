@@ -57,26 +57,19 @@ deploy:
     DOCKER_HOST: unix:///var/run/docker.sock
   before_script: []
   script:
-    # Ensure the shared network exists (so other containers like discocord_gw can connect)
     - docker network inspect discocord_net >/dev/null 2>&1 || docker network create discocord_net
-
-    # Stop & remove any existing frontend container
     - if [ "$(docker ps -aq -f name=discocord_fe)" ]; then docker rm -f discocord_fe; fi
-
-    # Remove previous image if it exists
     - if [ "$(docker images -q discocord_fe)" ]; then docker rmi -f discocord_fe; fi
-
-    # Build the new frontend image
-    - docker build \
+    - |
+      docker build \
         --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" \
         --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
         --build-arg CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
         --build-arg CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET" \
         --build-arg USE_PREBUILT=true \
         -t discocord_fe .
-
-    # Run it on your host's Docker — will persist after pipeline finishes
-    - docker run -d \
+    - |
+      docker run -d \
         --name discocord_fe \
         --network discocord_net \
         -p 3300:3000 \
