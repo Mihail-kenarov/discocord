@@ -44,6 +44,7 @@ test:
     - sleep 10   # wait for the server to start
     - bun run cy:run
 
+
 deploy:
   stage: deploy
   needs:
