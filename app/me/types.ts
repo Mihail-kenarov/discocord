@@ -21,6 +21,11 @@ export type GuildMessage = {
   };
   timestamp: string;
   content: string;
+  attachment?: {
+    url: string;
+    type: string;
+    size: number;
+  } | null;
 };
 
 export type GuildWithChannels = Guild & {

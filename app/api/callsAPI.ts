@@ -32,6 +32,12 @@ type GuildResponse = {
   messages?: GuildMessage[];
 };
 
+type AttachmentResponseRaw = {
+  url: string;
+  type: string;
+  size: number;
+};
+
 // Raw message response shapes from chat service
 type MessageResponseRaw = {
   id: string;
@@ -39,6 +45,7 @@ type MessageResponseRaw = {
   author_id: string;
   content: string;
   created_at: string; // RFC3339
+  attachment?: AttachmentResponseRaw | null;
 };
 
 type GetMessagesResponseRaw = {
@@ -59,14 +66,28 @@ function isAbsoluteUrl(url: string) {
   return /^(?:[a-z]+:)?\/\//i.test(url) || url.startsWith("data:");
 }
 
-function normalizeIconUrl(icon?: string | null): string | null {
-  if (!icon) return null;
-  const trimmed = icon.trim();
-  if (!trimmed) return null;
+function normalizeGatewayAssetUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
   if (isAbsoluteUrl(trimmed)) return trimmed;
   if (trimmed.startsWith("/gw/")) return trimmed;
   if (trimmed.startsWith("/")) return `${BASE_URL}${trimmed}`; // e.g. /icons/x.png -> /gw/icons/x.png
   return `${BASE_URL}/${trimmed}`; // e.g. icons/x.png -> /gw/icons/x.png
+}
+
+function normalizeIconUrl(icon?: string | null): string | null {
+  if (!icon) return null;
+  const normalized = normalizeGatewayAssetUrl(icon);
+  return normalized || null;
+}
+
+function normalizeAttachmentInfo(attachment?: AttachmentResponseRaw | null): AttachmentResponseRaw | null {
+  if (!attachment || !attachment.url) return null;
+  return {
+    url: normalizeGatewayAssetUrl(attachment.url),
+    type: attachment.type,
+    size: attachment.size,
+  };
 }
 
 function normalizeGuildResponse(guild: GuildResponse): GuildWithChannels {
@@ -220,13 +241,26 @@ export async function getUsersByIds(
 // Create a message in a channel
 export async function postChannelMessage(
   channelId: number | string,
-  payload: { authorId: string; content: string }
+  payload: { authorId: string; content: string; attachmentFile?: File | null }
 ): Promise<{ data: MessageResponseRaw | null; error: ApiError | null; }> {
   try {
     const url = buildGatewayUrl(`/channels/${encodeURIComponent(String(channelId))}/messages`);
-    const body = { author_id: payload.authorId, content: payload.content } as const;
-    const response = await axios.post<MessageResponseRaw>(url, body);
-    return { data: response.data, error: null };
+    let response;
+    if (payload.attachmentFile) {
+      const form = new FormData();
+      form.append("author_id", payload.authorId);
+      form.append("content", payload.content);
+      form.append("attachment", payload.attachmentFile);
+      response = await axios.post<MessageResponseRaw>(url, form);
+    } else {
+      const body = { author_id: payload.authorId, content: payload.content } as const;
+      response = await axios.post<MessageResponseRaw>(url, body);
+    }
+    const normalizedAttachment = normalizeAttachmentInfo(response.data.attachment);
+    const normalizedData: MessageResponseRaw = normalizedAttachment
+      ? { ...response.data, attachment: normalizedAttachment }
+      : { ...response.data, attachment: response.data.attachment ?? null };
+    return { data: normalizedData, error: null };
   } catch (err) {
     return { data: null, error: toApiError(err as AxiosError) };
   }
@@ -252,6 +286,7 @@ export async function getChannelMessages(
     const normalized: GuildMessage[] = raw.messages.map((m) => {
       const profile = byId.get(String(m.author_id));
       const date = new Date(m.created_at);
+      const attachment = normalizeAttachmentInfo(m.attachment);
       return {
         id: String(m.id),
         channelId: Number(m.channel_id),
@@ -261,6 +296,7 @@ export async function getChannelMessages(
         },
         timestamp: isNaN(date.getTime()) ? String(m.created_at) : date.toLocaleString(),
         content: m.content,
+        attachment,
       };
     });
 

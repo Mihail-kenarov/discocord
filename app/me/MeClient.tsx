@@ -195,12 +195,22 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     if (data) replaceChannelMessages(guildId, channelId, data);
   }, [replaceChannelMessages]);
 
-  const handleSendMessage = React.useCallback(async (guildId: string, channelId: number, content: string) => {
-    if (!content.trim()) return;
-    const { data, error } = await postChannelMessage(channelId, { authorId: user.id, content });
+  const handleSendMessage = React.useCallback(async (
+    guildId: string,
+    channelId: number,
+    content: string,
+    options?: { attachment?: File | null }
+  ) => {
+    const hasAttachment = Boolean(options?.attachment);
+    if (!content.trim() && !hasAttachment) return false;
+    const { data, error } = await postChannelMessage(channelId, {
+      authorId: user.id,
+      content,
+      attachmentFile: options?.attachment ?? undefined,
+    });
     if (error || !data) {
       toast.error(error?.message ?? "Failed to send message");
-      return;
+      return false;
     }
     const createdAt = new Date(data.created_at);
     const msg: GuildMessage = {
@@ -209,8 +219,10 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       author: { username: user.username, imageUrl: user.imageUrl ?? null },
       timestamp: isNaN(createdAt.getTime()) ? String(data.created_at) : createdAt.toLocaleString(),
       content: data.content,
+      attachment: data.attachment ?? null,
     };
     appendMessage(guildId, msg);
+    return true;
   }, [appendMessage, user.id, user.username, user.imageUrl]);
 
   return (
