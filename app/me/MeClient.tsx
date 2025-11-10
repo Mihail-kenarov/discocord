@@ -239,7 +239,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
         onSelectGuild={handleSelectGuild}
         onGuildCreated={handleGuildCreated}
       />
-      <SidebarInset className="flex min-h-screen flex-col bg-[#080808] text-white">
+      <SidebarInset className="flex h-screen min-h-0 flex-col overflow-hidden bg-[#080808] text-white">
         {selectedGuild ? (
           <GuildWorkspace
             guild={selectedGuild}
@@ -263,7 +263,7 @@ function HomeWorkspace({ friends, pending }: { friends: Person[]; pending: Perso
         <SidebarTrigger />
         <h1 className="text-lg font-semibold">Friends</h1>
       </header>
-      <main className="flex flex-1 flex-col gap-4 bg-[#080808] p-4">
+      <main className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto bg-[#080808] p-4">
         <FriendsTabs initialFriends={friends} initialPending={pending} />
         <section className="pt-4">
           <Suspense fallback={<div className="text-sm text-neutral-400">Loading action...</div>}>
