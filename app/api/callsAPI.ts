@@ -7,6 +7,7 @@ import axios, { AxiosError } from 'axios';
 import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
 
 const BASE_URL = '/gw'; // fixed per request; replace with env var when environments expand
+const GATEWAY_HOST_HINTS = ['discocord_gw', 'discocord_gw:8080', 'localhost:8080', 'localhost:8090'];
 
 export interface ApiError {
   message: string;
@@ -69,7 +70,19 @@ function isAbsoluteUrl(url: string) {
 function normalizeGatewayAssetUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return "";
-  if (isAbsoluteUrl(trimmed)) return trimmed;
+  if (isAbsoluteUrl(trimmed)) {
+    // data URLs and fully-qualified CDN assets remain untouched.
+    if (trimmed.startsWith("data:")) return trimmed;
+    try {
+      const parsed = new URL(trimmed);
+      if (GATEWAY_HOST_HINTS.some((host) => parsed.host === host)) {
+        return `${BASE_URL}${parsed.pathname}${parsed.search ?? ""}`;
+      }
+    } catch {
+      // fall back to returning the original absolute URL if parsing fails
+    }
+    return trimmed;
+  }
   if (trimmed.startsWith("/gw/")) return trimmed;
   if (trimmed.startsWith("/")) return `${BASE_URL}${trimmed}`; // e.g. /icons/x.png -> /gw/icons/x.png
   return `${BASE_URL}/${trimmed}`; // e.g. icons/x.png -> /gw/icons/x.png
