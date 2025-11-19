@@ -54,6 +54,18 @@ type GetMessagesResponseRaw = {
   messages: MessageResponseRaw[];
 };
 
+export type PersonalDataSnapshot = {
+  status: string;
+  data?: unknown;
+  error?: string;
+};
+
+export type PersonalDataBundle = {
+  userId: string;
+  requestedAt: string;
+  sources: Record<string, PersonalDataSnapshot>;
+};
+
 function normalizeChannel(channel: ChannelResponse): GuildChannel {
   return {
     id: Number(channel.id),
@@ -249,6 +261,28 @@ export async function getUsersByIds(
     imageUrl: normalizeIconUrl(u.imageUrl ?? u.avatarUrl ?? null),
   }));
   return { data: normalized, error: null };
+}
+
+// Retrieve aggregated personal data for a user (user service + downstream providers)
+export async function getUserPersonalData(
+  userId: string,
+  signal?: AbortSignal
+): Promise<{ data: PersonalDataBundle | null; error: ApiError | null; }> {
+  const trimmed = userId?.trim();
+  if (!trimmed) {
+    return { data: null, error: { message: "userId is required to retrieve personal data" } };
+  }
+
+  const path = `/users/${encodeURIComponent(trimmed)}/personal-data`;
+  const { data, error } = await getGateway<PersonalDataBundle>(path, signal);
+  if (!error) {
+    return { data, error: null };
+  }
+  const payload =
+    typeof error.details === "object" && error.details && "payload" in error.details
+      ? (error.details as { payload?: PersonalDataBundle }).payload ?? null
+      : null;
+  return { data: payload ?? null, error };
 }
 
 // Create a message in a channel

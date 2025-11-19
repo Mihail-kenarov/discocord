@@ -6,7 +6,7 @@ stages:
 default:
   image: oven/bun:1
   tags:
-    - docker          # 👈 ensures all jobs use your Docker runner by default
+    - docker          
   before_script:
     - bun --version
 
