@@ -26,7 +26,7 @@ export function PersonalDataDialog({ open, onOpenChange, data, error, isLoading,
   const sources = React.useMemo(() => Object.entries(data?.sources ?? {}), [data]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[82vh] overflow-hidden">
+      <DialogContent className="max-w-5xl max-h-[82vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Personal Data Export</DialogTitle>
           <DialogDescription>Snapshot of the information stored across DiscoCord services.</DialogDescription>
@@ -101,7 +101,7 @@ function PersonalDataSourceCard({ name, snapshot }: { name: string; snapshot: Pe
       </div>
       {dataDisplay ? (
         <div className="max-w-full overflow-x-auto rounded-md bg-black/40">
-          <pre className="w-full min-w-max whitespace-pre p-3 text-xs leading-5">
+          <pre className="w-full whitespace-pre-wrap break-words p-3 text-xs leading-5">
             {dataDisplay}
           </pre>
         </div>
