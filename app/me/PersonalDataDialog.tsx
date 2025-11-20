@@ -26,7 +26,7 @@ export function PersonalDataDialog({ open, onOpenChange, data, error, isLoading,
   const sources = React.useMemo(() => Object.entries(data?.sources ?? {}), [data]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[82vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Personal Data Export</DialogTitle>
           <DialogDescription>Snapshot of the information stored across DiscoCord services.</DialogDescription>
@@ -38,25 +38,28 @@ export function PersonalDataDialog({ open, onOpenChange, data, error, isLoading,
           </div>
         ) : data ? (
           <div className="space-y-4">
-            <div className="rounded-md border bg-muted/40 p-3 text-sm">
-              <p>
-                <span className="text-muted-foreground">User ID:</span> {data.userId}
-              </p>
-              <p>
-                <span className="text-muted-foreground">Requested at:</span>{" "}
-                {formatRequestedAt(data.requestedAt)}
-              </p>
+            <div className="rounded-lg border bg-muted/40 p-3 text-sm shadow-sm">
+              <div className="grid gap-1 sm:grid-cols-2">
+                <p className="truncate">
+                  <span className="text-muted-foreground">User ID: </span>
+                  <span className="font-medium">{data.userId}</span>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Requested at: </span>
+                  <span className="font-medium">{formatRequestedAt(data.requestedAt)}</span>
+                </p>
+              </div>
             </div>
-            {error && (
-              <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            {error ? (
+              <p className="rounded-md border border-amber-400 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 {error}
               </p>
-            )}
+            ) : null}
             {sources.length === 0 ? (
               <p className="text-sm text-muted-foreground">No data sources responded.</p>
             ) : (
-              <ScrollArea className="max-h-[320px] rounded-md border">
-                <div className="divide-y">
+              <ScrollArea className="max-h-[52vh] rounded-md border bg-background/60">
+                <div className="space-y-3 p-3">
                   {sources.map(([service, snapshot]) => (
                     <PersonalDataSourceCard key={service} name={service} snapshot={snapshot} />
                   ))}
@@ -86,18 +89,22 @@ function PersonalDataSourceCard({ name, snapshot }: { name: string; snapshot: Pe
   const dataDisplay = snapshot.data ? formatSnapshotData(snapshot.data) : null;
 
   return (
-    <div className="space-y-2 p-3">
-      <div className="flex items-center justify-between gap-4">
-        <p className="font-medium capitalize">{name.replace(/_/g, " ")}</p>
-        <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", statusClasses)}>
+    <div className="space-y-2 rounded-lg border bg-muted/30 p-3 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="font-semibold capitalize">{name.replace(/_/g, " ")}</p>
+          {snapshot.error && <p className="text-sm text-destructive">{snapshot.error}</p>}
+        </div>
+        <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold capitalize", statusClasses)}>
           {snapshot.status ?? "unknown"}
         </span>
       </div>
-      {snapshot.error && <p className="text-sm text-destructive">{snapshot.error}</p>}
-      {dataDisplay && (
-        <pre className="whitespace-pre-wrap break-words rounded-md bg-muted/60 p-2 text-xs">
+      {dataDisplay ? (
+        <pre className="whitespace-pre-wrap break-words rounded-md bg-black/40 p-3 text-xs leading-5">
           {dataDisplay}
         </pre>
+      ) : (
+        <p className="text-sm text-muted-foreground">No data returned from this service.</p>
       )}
     </div>
   );
