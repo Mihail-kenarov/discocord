@@ -92,7 +92,7 @@ function PersonalDataSourceCard({ name, snapshot }: { name: string; snapshot: Pe
     <div className="space-y-2 rounded-lg border bg-muted/30 p-3 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <p className="font-semibold capitalize">{name.replace(/_/g, " ")}</p>
+          <p className="font-semibold">{formatServiceName(name)}</p>
           {snapshot.error && <p className="text-sm text-destructive">{snapshot.error}</p>}
         </div>
         <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold capitalize", statusClasses)}>
@@ -100,9 +100,11 @@ function PersonalDataSourceCard({ name, snapshot }: { name: string; snapshot: Pe
         </span>
       </div>
       {dataDisplay ? (
-        <pre className="whitespace-pre-wrap break-words rounded-md bg-black/40 p-3 text-xs leading-5">
-          {dataDisplay}
-        </pre>
+        <div className="max-w-full overflow-x-auto rounded-md bg-black/40">
+          <pre className="w-full min-w-max whitespace-pre p-3 text-xs leading-5">
+            {dataDisplay}
+          </pre>
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">No data returned from this service.</p>
       )}
@@ -145,4 +147,13 @@ function formatSnapshotData(data: unknown): string {
 function formatRequestedAt(value: string) {
   const date = new Date(value);
   return isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function formatServiceName(raw: string) {
+  const normalized = raw.toLowerCase();
+  if (normalized === "chat") return "Chat data";
+  if (normalized === "guild") return "Guild data";
+  if (normalized === "user service" || normalized === "user_service") return "User data";
+  const cleaned = raw.replace(/_/g, " ").trim();
+  return cleaned.slice(0, 1).toUpperCase() + cleaned.slice(1);
 }
