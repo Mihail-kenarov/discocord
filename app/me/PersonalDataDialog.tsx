@@ -40,7 +40,7 @@ export function PersonalDataDialog({ open, onOpenChange, data, error, isLoading,
           <div className="space-y-4">
             <div className="rounded-lg border bg-muted/40 p-3 text-sm shadow-sm">
               <div className="grid gap-1 sm:grid-cols-2">
-                <p className="truncate">
+                <p className="break-all">
                   <span className="text-muted-foreground">User ID: </span>
                   <span className="font-medium">{data.userId}</span>
                 </p>
