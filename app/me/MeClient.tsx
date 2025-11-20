@@ -9,9 +9,8 @@ import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChanne
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
-import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage, setGatewayAuthTokenResolver } from "@/app/api/callsAPI";
+import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage } from "@/app/api/callsAPI";
 import { toast } from "sonner";
-import { useAuth } from "@clerk/nextjs";
 
 type MeClientProps = {
   user: AppSidebarUser;
@@ -23,28 +22,10 @@ type MeClientProps = {
 type ActiveChannelState = Record<string, GuildChannel["id"]>;
 
 export function MeClient({ user, initialGuilds, friends, pending }: MeClientProps) {
-  const { getToken, isSignedIn, isLoaded } = useAuth();
   const [guilds, setGuilds] = React.useState<GuildWithChannels[]>(initialGuilds);
   const [selectedGuildId, setSelectedGuildId] = React.useState<string | null>(null);
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
   const [loadingGuildId, setLoadingGuildId] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    setGatewayAuthTokenResolver(async () => {
-      if (cancelled || !isLoaded || !isSignedIn) return null;
-      try {
-        // Use a deterministic template for client→gateway calls.
-        return await getToken({ template: "integration_fallback", skipCache: true });
-      } catch {
-        return null;
-      }
-    });
-    return () => {
-      cancelled = true;
-      setGatewayAuthTokenResolver(null);
-    };
-  }, [getToken, isLoaded, isSignedIn]);
 
   const refreshGuildById = React.useCallback(async (guildId: string) => {
     if (!guildId) return;
@@ -79,7 +60,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   }, [initialGuilds]);
 
   React.useEffect(() => {
-    if (!user.id || !isLoaded || !isSignedIn) return;
+    if (!user.id) return;
     let cancelled = false;
     const controller = new AbortController();
 
@@ -115,7 +96,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       cancelled = true;
       controller.abort();
     };
-  }, [user.id, refreshGuildById, isLoaded, isSignedIn]);
+  }, [user.id, refreshGuildById]);
 
   const selectedGuild = React.useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,

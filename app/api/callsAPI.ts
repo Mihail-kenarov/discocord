@@ -3,53 +3,12 @@
 // Usage: import { getFromBackend } from './callsAPI';
 // const { data, error } = await getFromBackend('/health');
 
-import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
 
 // Single, fixed gateway entrypoint. The Next rewrite in next.config.mjs maps /gw/* to the gateway service.
 const BASE_URL = "/gw";
 const GATEWAY_HOST_HINTS = ['discocord_gw', 'discocord_gw:8080', 'localhost:8080', 'localhost:8090'];
-type AuthTokenResolver = (() => Promise<string | null | undefined>) | null;
-let authTokenResolver: AuthTokenResolver = null;
-let gatewayInterceptorId: number | null = null;
-
-export function setGatewayAuthTokenResolver(resolver: AuthTokenResolver) {
-  authTokenResolver = resolver;
-  ensureGatewayAuthInterceptor();
-}
-
-function ensureGatewayAuthInterceptor() {
-  if (gatewayInterceptorId !== null) return;
-  gatewayInterceptorId = axios.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-    if (!config.url || !config.url.startsWith(BASE_URL)) {
-      return config;
-    }
-    if (!authTokenResolver) {
-      return config;
-    }
-    try {
-      const token = await authTokenResolver();
-      if (token) {
-        const headers = config.headers ?? {};
-        // Normalize headers across Axios versions (plain object or AxiosHeaders instance)
-        if (headers instanceof AxiosHeaders) {
-          if (!headers.has("authorization")) {
-            headers.set("Authorization", `Bearer ${token}`);
-          }
-        } else {
-          const existingAuth = headers["Authorization"] ?? (headers as Record<string, unknown>)["authorization"];
-          if (!existingAuth) {
-            (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-          }
-          config.headers = headers;
-        }
-      }
-    } catch {
-      // best-effort; continue without auth header
-    }
-    return config;
-  });
-}
 
 export interface ApiError {
   message: string;
@@ -399,3 +358,4 @@ export async function getChannelMessages(
     return { data: null, error: toApiError(err as AxiosError) };
   }
 }
+       
