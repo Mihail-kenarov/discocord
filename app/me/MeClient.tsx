@@ -23,7 +23,7 @@ type MeClientProps = {
 type ActiveChannelState = Record<string, GuildChannel["id"]>;
 
 export function MeClient({ user, initialGuilds, friends, pending }: MeClientProps) {
-  const { getToken, isSignedIn } = useAuth();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
   const [guilds, setGuilds] = React.useState<GuildWithChannels[]>(initialGuilds);
   const [selectedGuildId, setSelectedGuildId] = React.useState<string | null>(null);
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
@@ -32,7 +32,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   React.useEffect(() => {
     let cancelled = false;
     setGatewayAuthTokenResolver(async () => {
-      if (!isSignedIn || cancelled) return null;
+      if (cancelled || !isLoaded || !isSignedIn) return null;
       try {
         return await getToken();
       } catch {
@@ -43,7 +43,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       cancelled = true;
       setGatewayAuthTokenResolver(null);
     };
-  }, [getToken, isSignedIn]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   const refreshGuildById = React.useCallback(async (guildId: string) => {
     if (!guildId) return;
@@ -78,7 +78,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   }, [initialGuilds]);
 
   React.useEffect(() => {
-    if (!user.id) return;
+    if (!user.id || !isLoaded || !isSignedIn) return;
     let cancelled = false;
     const controller = new AbortController();
 
@@ -114,7 +114,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       cancelled = true;
       controller.abort();
     };
-  }, [user.id, refreshGuildById]);
+  }, [user.id, refreshGuildById, isLoaded, isSignedIn]);
 
   const selectedGuild = React.useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
