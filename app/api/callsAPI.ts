@@ -3,7 +3,7 @@
 // Usage: import { getFromBackend } from './callsAPI';
 // const { data, error } = await getFromBackend('/health');
 
-import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
 
 const BASE_URL = '/gw'; // fixed per request; replace with env var when environments expand
@@ -19,7 +19,7 @@ export function setGatewayAuthTokenResolver(resolver: AuthTokenResolver) {
 
 function ensureGatewayAuthInterceptor() {
   if (gatewayInterceptorId !== null) return;
-  gatewayInterceptorId = axios.interceptors.request.use(async (config: AxiosRequestConfig) => {
+  gatewayInterceptorId = axios.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
     if (!config.url || !config.url.startsWith(BASE_URL)) {
       return config;
     }
@@ -29,10 +29,10 @@ function ensureGatewayAuthInterceptor() {
     try {
       const token = await authTokenResolver();
       if (token) {
-        config.headers = config.headers ?? {};
+        const headers = config.headers;
         // Respect pre-existing headers while injecting Authorization
-        if (!config.headers['Authorization'] && !config.headers['authorization']) {
-          config.headers['Authorization'] = `Bearer ${token}`;
+        if (!headers['Authorization'] && !headers['authorization']) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
       }
     } catch {
