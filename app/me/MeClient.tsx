@@ -34,7 +34,8 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     setGatewayAuthTokenResolver(async () => {
       if (cancelled || !isLoaded || !isSignedIn) return null;
       try {
-        return await getToken();
+        // Use a deterministic template for client→gateway calls.
+        return await getToken({ template: "integration_fallback", skipCache: true });
       } catch {
         return null;
       }

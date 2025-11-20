@@ -3,10 +3,11 @@
 // Usage: import { getFromBackend } from './callsAPI';
 // const { data, error } = await getFromBackend('/health');
 
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
 import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
 
-const BASE_URL = '/gw'; // fixed per request; replace with env var when environments expand
+// Single, fixed gateway entrypoint. The Next rewrite in next.config.mjs maps /gw/* to the gateway service.
+const BASE_URL = "/gw";
 const GATEWAY_HOST_HINTS = ['discocord_gw', 'discocord_gw:8080', 'localhost:8080', 'localhost:8090'];
 type AuthTokenResolver = (() => Promise<string | null | undefined>) | null;
 let authTokenResolver: AuthTokenResolver = null;
@@ -29,10 +30,18 @@ function ensureGatewayAuthInterceptor() {
     try {
       const token = await authTokenResolver();
       if (token) {
-        const headers = config.headers;
-        // Respect pre-existing headers while injecting Authorization
-        if (!headers['Authorization'] && !headers['authorization']) {
-          headers['Authorization'] = `Bearer ${token}`;
+        const headers = config.headers ?? {};
+        // Normalize headers across Axios versions (plain object or AxiosHeaders instance)
+        if (headers instanceof AxiosHeaders) {
+          if (!headers.has("authorization")) {
+            headers.set("Authorization", `Bearer ${token}`);
+          }
+        } else {
+          const existingAuth = headers["Authorization"] ?? (headers as Record<string, unknown>)["authorization"];
+          if (!existingAuth) {
+            (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+          }
+          config.headers = headers;
         }
       }
     } catch {
@@ -199,19 +208,24 @@ export async function createGuild(payload: {
   ownerId: string;
   iconFile?: File | null;
 }): Promise<Guild> {
-  const form = new FormData();
-  form.append("name", payload.name);
-  form.append("ownerId", payload.ownerId);
-  if (payload.iconFile) {
-    form.append("icon", payload.iconFile);
+  try {
+    const form = new FormData();
+    form.append("name", payload.name);
+    form.append("ownerId", payload.ownerId);
+    if (payload.iconFile) {
+      form.append("icon", payload.iconFile);
+    }
+
+    const url = buildGatewayUrl("/guilds");
+    const response = await axios.post<Guild>(url, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return response.data;
+  } catch (err) {
+    const error = toApiError(err as AxiosError);
+    throw error;
   }
-
-  const url = buildGatewayUrl("/guilds");
-  const response = await axios.post<Guild>(url, form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-
-  return response.data;
 }
 
 export async function getGuildById(
