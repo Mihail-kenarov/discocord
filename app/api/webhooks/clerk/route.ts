@@ -9,14 +9,24 @@ function getImageUrl(data: unknown): string | undefined {
   return undefined;
 }
 
+const gatewayURL = "http://discocord_gw:8080/users";
+
+function gatewayHeaders(userId: string) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = process.env.SERVICE_API_TOKEN;
+  if (token) {
+    headers["X-Service-Token"] = token;
+    headers["X-User-ID"] = userId;
+  }
+  return headers;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const evt = await verifyWebhook(req);
     const eventType = evt.type;
 
     console.log(`Received event: ${eventType}`);
-
-    const gatewayURL = "http://discocord_gw:8080/users";
 
     switch (eventType) {
       case "user.created": {
@@ -30,7 +40,7 @@ export async function POST(req: NextRequest) {
 
         await fetch(gatewayURL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: gatewayHeaders(evt.data.id),
           body: JSON.stringify(userData),
         });
         break;
@@ -47,7 +57,7 @@ export async function POST(req: NextRequest) {
 
         await fetch(`${gatewayURL}/${evt.data.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: gatewayHeaders(evt.data.id),
           body: JSON.stringify(userData),
         });
         break;
@@ -56,6 +66,7 @@ export async function POST(req: NextRequest) {
       case "user.deleted": {
         await fetch(`${gatewayURL}/${evt.data.id}`, {
           method: "DELETE",
+          headers: gatewayHeaders(evt.data.id),
         });
         break;
       }
