@@ -1,14 +1,6 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
 
-function getImageUrl(data: unknown): string | undefined {
-  if (data && typeof data === "object" && "image_url" in data) {
-    const value = (data as { image_url?: unknown }).image_url;
-    return typeof value === "string" ? value : undefined;
-  }
-  return undefined;
-}
-
 const gatewayURL = "http://discocord_gw:8080/users";
 
 function gatewayHeaders(userId: string) {
@@ -25,13 +17,19 @@ export async function POST(req: NextRequest) {
   try {
     const evt = await verifyWebhook(req);
     const eventType = evt.type;
+    const userId = evt.data?.id;
+
+    if (typeof userId !== "string" || userId.length === 0) {
+      console.error("Webhook missing user id", { eventType, data: evt.data });
+      return new Response("Invalid webhook payload", { status: 400 });
+    }
 
     console.log(`Received event: ${eventType}`);
 
     switch (eventType) {
       case "user.created": {
         const userData = {
-          clerkUserId: evt.data.id,
+          clerkUserId: userId,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
@@ -40,7 +38,7 @@ export async function POST(req: NextRequest) {
 
         await fetch(gatewayURL, {
           method: "POST",
-          headers: gatewayHeaders(evt.data.id),
+          headers: gatewayHeaders(userId),
           body: JSON.stringify(userData),
         });
         break;
@@ -48,25 +46,25 @@ export async function POST(req: NextRequest) {
 
       case "user.updated": {
         const userData = {
-          clerkUserId: evt.data.id,
+          clerkUserId: userId,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           updatedAt: evt.data.updated_at,
         };
 
-        await fetch(`${gatewayURL}/${evt.data.id}`, {
+        await fetch(`${gatewayURL}/${userId}`, {
           method: "PUT",
-          headers: gatewayHeaders(evt.data.id),
+          headers: gatewayHeaders(userId),
           body: JSON.stringify(userData),
         });
         break;
       }
 
       case "user.deleted": {
-        await fetch(`${gatewayURL}/${evt.data.id}`, {
+        await fetch(`${gatewayURL}/${userId}`, {
           method: "DELETE",
-          headers: gatewayHeaders(evt.data.id),
+          headers: gatewayHeaders(userId),
         });
         break;
       }
