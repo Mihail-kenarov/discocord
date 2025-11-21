@@ -15,7 +15,6 @@ import { createGuild, type ApiError } from "@/app/api/callsAPI";
 import type { Guild } from "./types";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
-import { get } from "http";
 
 type CreateGuildDialogProps = {
   open: boolean;
@@ -89,7 +88,7 @@ const handleSubmit = React.useCallback(
         name: trimmedName,
         ownerId,
         iconFile,
-      }, token); // 👈 pass the token to the API helper
+      }, token ?? undefined); // 👈 pass the token to the API helper
 
       toast.success(`Created ${guild.name}`);
       onGuildCreated?.(guild);
