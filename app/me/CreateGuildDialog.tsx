@@ -14,6 +14,8 @@ import { Plus, Upload } from "lucide-react";
 import { createGuild, type ApiError } from "@/app/api/callsAPI";
 import type { Guild } from "./types";
 import { toast } from "sonner";
+import { useAuth } from "@clerk/nextjs";
+import { get } from "http";
 
 type CreateGuildDialogProps = {
   open: boolean;
@@ -23,11 +25,13 @@ type CreateGuildDialogProps = {
 };
 
 export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated }: CreateGuildDialogProps) {
+  const { getToken } = useAuth();
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [guildName, setGuildName] = React.useState("");
   const [iconPreview, setIconPreview] = React.useState<string | null>(null);
   const [iconFile, setIconFile] = React.useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
 
   const resetForm = React.useCallback(() => {
     setGuildName("");
@@ -68,36 +72,38 @@ export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated 
     fileInputRef.current?.click();
   }, []);
 
-  const handleSubmit = React.useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (isSubmitting) return;
-      const trimmedName = guildName.trim();
-      if (!trimmedName) {
-        toast.error("Server name is required.");
-        return;
-      }
+const handleSubmit = React.useCallback(
+  async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    const trimmedName = guildName.trim();
+    if (!trimmedName) {
+      toast.error("Server name is required.");
+      return;
+    }
 
-      setIsSubmitting(true);
-      try {
-        const guild = await createGuild({
+    setIsSubmitting(true);
+    try {
+      const token = await getToken(); // 👈 retrieve the JWT
+      const guild = await createGuild({
         name: trimmedName,
         ownerId,
         iconFile,
-      });
-        toast.success(`Created ${guild.name}`);
-        onGuildCreated?.(guild);
-        resetForm();
-        onOpenChange(false);
-      } catch (error) {
-        const apiError = error as ApiError;
-        toast.error(apiError.message || "Failed to create server");
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [guildName, iconFile, isSubmitting, onGuildCreated, onOpenChange, ownerId, resetForm]
-  );
+      }, token); // 👈 pass the token to the API helper
+
+      toast.success(`Created ${guild.name}`);
+      onGuildCreated?.(guild);
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError.message || "Failed to create server");
+    } finally {
+      setIsSubmitting(false);
+    }
+  },
+  [guildName, iconFile, isSubmitting, onGuildCreated, onOpenChange, ownerId, resetForm, getToken]
+);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

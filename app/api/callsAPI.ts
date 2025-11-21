@@ -162,11 +162,14 @@ export async function getGatewayUserwithId<T = unknown>(id: string | number, sig
   return getGateway<T>(`/users/${id}`, signal);
 }
 
-export async function createGuild(payload: {
-  name: string;
-  ownerId: string;
-  iconFile?: File | null;
-}): Promise<Guild> {
+export async function createGuild(
+  payload: {
+    name: string;
+    ownerId: string;
+    iconFile?: File | null;
+  },
+  token?: string
+): Promise<Guild> {
   try {
     const form = new FormData();
     form.append("name", payload.name);
@@ -177,7 +180,10 @@ export async function createGuild(payload: {
 
     const url = buildGatewayUrl("/guilds");
     const response = await axios.post<Guild>(url, form, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
     });
 
     return response.data;
