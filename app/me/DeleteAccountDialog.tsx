@@ -37,7 +37,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
           JSON.stringify({ type: "success", message: "Account was deleted successfully" })
         );
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete account");
       setDeleting(false);
       return;

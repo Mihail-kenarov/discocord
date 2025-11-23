@@ -28,6 +28,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   const [selectedGuildId, setSelectedGuildId] = React.useState<string | null>(null);
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
   const [loadingGuildId, setLoadingGuildId] = React.useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const refreshGuildById = React.useCallback(async (guildId: string) => {
     if (!guildId) return;
@@ -68,7 +69,6 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
 
     const loadGuilds = async () => {
       try { 
-        const { getToken } = useAuth();
         const rawToken = await getToken();
         const token = rawToken ?? undefined;
         const { data, error } = await listMyGuilds(user.id, controller.signal, token);
@@ -101,7 +101,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       cancelled = true;
       controller.abort();
     };
-  }, [user.id, refreshGuildById]);
+  }, [user.id, refreshGuildById, getToken]);
 
   const selectedGuild = React.useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
