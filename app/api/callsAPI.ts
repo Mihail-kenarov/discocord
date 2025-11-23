@@ -141,10 +141,19 @@ function toApiError(error: AxiosError): ApiError {
   };
 }
 
-export async function getGateway<T = unknown>(path: string, signal?: AbortSignal): Promise<{ data: T | null; error: ApiError | null; }> {
+export async function getGateway<T = unknown>(
+  path: string,
+  signal?: AbortSignal,
+  token?: string
+): Promise<{ data: T | null; error: ApiError | null; }> {
   try {
     const url = buildGatewayUrl(path);
-    const response = await axios.get<T>(url, { signal });
+    const response = await axios.get<T>(url, {
+      signal,
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
     return { data: response.data, error: null };
   } catch (err) {
     return { data: null, error: toApiError(err as AxiosError) };
@@ -211,7 +220,8 @@ export async function getGuildById(
 
 export async function listMyGuilds(
   userId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  token?: string
 ): Promise<{ data: GuildWithChannels[] | null; error: ApiError | null; }> {
   if (!userId) {
     return {
@@ -221,7 +231,11 @@ export async function listMyGuilds(
   }
 
   const params = new URLSearchParams({ userId });
-  const { data, error } = await getGateway<GuildResponse[]>(`/my/guilds?${params.toString()}`, signal);
+  const { data, error } = await getGateway<GuildResponse[]>(
+    `/my/guilds?${params.toString()}`,
+    signal,
+    token
+  );
 
   if (error || !data) {
     return { data: null, error };
@@ -363,6 +377,6 @@ export async function getChannelMessages(
   } catch (err) {
     return { data: null, error: toApiError(err as AxiosError) };
   }
-  
+
 }
        

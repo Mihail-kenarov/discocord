@@ -11,6 +11,8 @@ import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
 import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage } from "@/app/api/callsAPI";
 import { toast } from "sonner";
+import { useAuth } from "@clerk/nextjs";
+
 
 type MeClientProps = {
   user: AppSidebarUser;
@@ -65,8 +67,11 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     const controller = new AbortController();
 
     const loadGuilds = async () => {
-      try {
-        const { data, error } = await listMyGuilds(user.id, controller.signal);
+      try { 
+        const { getToken } = useAuth();
+        const rawToken = await getToken();
+        const token = rawToken ?? undefined;
+        const { data, error } = await listMyGuilds(user.id, controller.signal, token);
         if (cancelled || controller.signal.aborted) return;
         if (error) {
           toast.error(error.message ?? "Failed to load your servers.");
