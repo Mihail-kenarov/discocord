@@ -30,59 +30,48 @@ export async function POST(req: NextRequest) {
     console.log(`Received event: ${eventType}`);
 
     switch (eventType) {
+
       case "user.created": {
         const userData = {
-          id: userId,
+          clerkUserId: userId,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           createdAt: evt.data.created_at,
         };
 
-        const res = await fetch(gatewayURL, {
+        await fetch(gatewayURL, {
           method: "POST",
-          headers: gatewayHeaders(null),
           body: JSON.stringify(userData),
         });
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error(`[Webhook] Failed to create user ${userId}: ${res.status} ${errorText}`);
-        }
         break;
       }
 
       case "user.updated": {
         const userData = {
-          id: userId,
+          clerkUserId: userId,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           updatedAt: evt.data.updated_at,
         };
 
-        const res = await fetch(`${gatewayURL}/${userId}`, {
+        await fetch(`${gatewayURL}/${userId}`, {
           method: "PUT",
           headers: gatewayHeaders(token),
           body: JSON.stringify(userData),
         });
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error(`[Webhook] Failed to update user ${userId}: ${res.status} ${errorText}`);
-        }
         break;
       }
 
       case "user.deleted": {
-        const res = await fetch(`${gatewayURL}/${userId}`, {
+        await fetch(`${gatewayURL}/${userId}`, {
           method: "DELETE",
           headers: gatewayHeaders(token),
         });
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error(`[Webhook] Failed to delete user ${userId}: ${res.status} ${errorText}`);
-        }
         break;
       }
+
 
       default:
         console.log("Unhandled event type:", eventType);
