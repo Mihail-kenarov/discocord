@@ -1,6 +1,6 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
-import { useAuth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 
 
 const gatewayURL = "http://discocord_gw:8080/users";
@@ -16,8 +16,8 @@ function gatewayHeaders(token?: string | null) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { getToken } = useAuth();
-    const token = await getToken();
+    const authResult = await auth();
+    const token = await authResult.getToken();
     const evt = await verifyWebhook(req);
     const eventType = evt.type;
     const userId = evt.data?.id;
