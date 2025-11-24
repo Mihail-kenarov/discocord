@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Hash, Paperclip, SendHorizontal, Smile, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getGuildMembers, getUsersByIds } from "@/app/api/callsAPI";
+import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
@@ -50,6 +51,8 @@ export function GuildWorkspace({
   const [showMembers, setShowMembers] = React.useState(true);
   const [members, setMembers] = React.useState<MemberUser[] | null>(null);
   const [membersLoading, setMembersLoading] = React.useState(false);
+  const { getToken } = useAuth();
+  const fetchToken = React.useCallback(async () => (await getToken()) ?? undefined, [getToken]);
 
   const sortedChannels = React.useMemo(
     () => [...guild.channels].sort((a, b) => a.position - b.position),
@@ -77,14 +80,15 @@ export function GuildWorkspace({
     const load = async () => {
       setMembersLoading(true);
       try {
-        const { data: idsData, error: idsErr } = await getGuildMembers(guild.id, controller.signal);
+        const token = await fetchToken();
+        const { data: idsData, error: idsErr } = await getGuildMembers(guild.id, controller.signal, token);
         if (cancelled || controller.signal.aborted) return;
         if (idsErr || !idsData) {
           setMembers([]);
           return;
         }
         const idsOrdered = Array.from(new Set([idsData.ownerId, ...idsData.memberIds].filter(Boolean)));
-        const { data: profiles, error: profErr } = await getUsersByIds(idsOrdered, controller.signal);
+        const { data: profiles, error: profErr } = await getUsersByIds(idsOrdered, controller.signal, token);
         if (cancelled || controller.signal.aborted) return;
         if (profErr || !profiles) {
           setMembers([]);
@@ -104,7 +108,7 @@ export function GuildWorkspace({
       cancelled = true;
       controller.abort();
     };
-  }, [guild.id]);
+  }, [fetchToken, guild.id]);
 
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
