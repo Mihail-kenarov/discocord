@@ -204,10 +204,11 @@ export async function createGuild(
 
 export async function getGuildById(
   id: string | number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  token?: string
 ): Promise<{ data: GuildWithChannels | null; error: ApiError | null; }> {
   const encodedId = encodeURIComponent(String(id));
-  const { data, error } = await getGateway<GuildResponse>(`/guilds/${encodedId}`, signal);
+  const { data, error } = await getGateway<GuildResponse>(`/guilds/${encodedId}`, signal, token);
 
   if (error || !data) {
     return { data: null, error };
@@ -248,7 +249,8 @@ export async function listMyGuilds(
 // Fetch only IDs of guild members from guild service
 export async function getGuildMembers(
   guildId: string | number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  token?: string
 ): Promise<{ data: { ownerId: string; memberIds: string[] } | null; error: ApiError | null; }> {
   const encodedId = encodeURIComponent(String(guildId));
   const { data, error } = await getGateway<{
@@ -256,7 +258,7 @@ export async function getGuildMembers(
     ownerID?: string | number;
     memberIds?: Array<string | number>;
     memberIDs?: Array<string | number>;
-  }>(`/guilds/${encodedId}/members`, signal);
+  }>(`/guilds/${encodedId}/members`, signal, token);
 
   if (error || !data) return { data: null, error };
 
@@ -268,7 +270,8 @@ export async function getGuildMembers(
 // Batch resolve users via user service
 export async function getUsersByIds(
   ids: string[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  token?: string
 ): Promise<{ data: MemberUser[] | null; error: ApiError | null; }> {
   if (!ids || ids.length === 0) return { data: [], error: null };
   const params = new URLSearchParams({ ids: ids.join(',') });
@@ -277,7 +280,7 @@ export async function getUsersByIds(
     username: string;
     imageUrl?: string | null;
     avatarUrl?: string | null;
-  }>>(`/users?${params.toString()}`, signal);
+  }>>(`/users?${params.toString()}`, signal, token);
 
   if (error || !data) return { data: null, error };
 
@@ -292,7 +295,8 @@ export async function getUsersByIds(
 // Retrieve aggregated personal data for a user (user service + downstream providers)
 export async function getUserPersonalData(
   userId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  token?: string
 ): Promise<{ data: PersonalDataBundle | null; error: ApiError | null; }> {
   const trimmed = userId?.trim();
   if (!trimmed) {
@@ -300,7 +304,7 @@ export async function getUserPersonalData(
   }
 
   const path = `/users/${encodeURIComponent(trimmed)}/personal-data`;
-  const { data, error } = await getGateway<PersonalDataBundle>(path, signal);
+  const { data, error } = await getGateway<PersonalDataBundle>(path, signal, token );
   if (!error) {
     return { data, error: null };
   }
@@ -314,7 +318,8 @@ export async function getUserPersonalData(
 // Create a message in a channel
 export async function postChannelMessage(
   channelId: number | string,
-  payload: { authorId: string; content: string; attachmentFile?: File | null }
+  payload: { authorId: string; content: string; attachmentFile?: File | null },
+  token?: string
 ): Promise<{ data: MessageResponseRaw | null; error: ApiError | null; }> {
   try {
     const url = buildGatewayUrl(`/channels/${encodeURIComponent(String(channelId))}/messages`);
@@ -324,10 +329,19 @@ export async function postChannelMessage(
       form.append("author_id", payload.authorId);
       form.append("content", payload.content);
       form.append("attachment", payload.attachmentFile);
-      response = await axios.post<MessageResponseRaw>(url, form);
+      response = await axios.post<MessageResponseRaw>(url, form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
     } else {
       const body = { author_id: payload.authorId, content: payload.content } as const;
-      response = await axios.post<MessageResponseRaw>(url, body);
+      response = await axios.post<MessageResponseRaw>(url, body, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
     }
     const normalizedAttachment = normalizeAttachmentInfo(response.data.attachment);
     const normalizedData: MessageResponseRaw = normalizedAttachment
@@ -343,7 +357,8 @@ export async function postChannelMessage(
 export async function getChannelMessages(
   channelId: number | string,
   options?: { limit?: number; before?: string | number },
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  token?: string
 ): Promise<{ data: GuildMessage[] | null; error: ApiError | null; }> {
   try {
     const params = new URLSearchParams();
@@ -353,7 +368,7 @@ export async function getChannelMessages(
     const response = await axios.get<GetMessagesResponseRaw>(url, { signal });
     const raw = response.data;
     const authorIds = Array.from(new Set(raw.messages.map((m) => m.author_id)));
-    const { data: users } = await getUsersByIds(authorIds, signal);
+    const { data: users } = await getUsersByIds(authorIds, signal, token);
     const byId = new Map((users ?? []).map((u) => [u.id, u] as const));
 
     const normalized: GuildMessage[] = raw.messages.map((m) => {
