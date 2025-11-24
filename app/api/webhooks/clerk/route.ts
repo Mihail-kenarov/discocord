@@ -1,20 +1,23 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
+import { useAuth } from "@clerk/nextjs";
+
 
 const gatewayURL = "http://discocord_gw:8080/users";
 
-function gatewayHeaders(userId: string) {
+
+function gatewayHeaders(token?: string | null) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const token = process.env.SERVICE_API_TOKEN;
   if (token) {
-    headers["X-Service-Token"] = token;
-    headers["X-User-ID"] = userId;
+    headers.Authorization = `Bearer ${token}`;
   }
   return headers;
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const { getToken } = useAuth();
+    const token = await getToken();
     const evt = await verifyWebhook(req);
     const eventType = evt.type;
     const userId = evt.data?.id;
@@ -54,7 +57,7 @@ export async function POST(req: NextRequest) {
 
         await fetch(`${gatewayURL}/${userId}`, {
           method: "PUT",
-          headers: gatewayHeaders(userId),
+          headers: gatewayHeaders(token),
           body: JSON.stringify(userData),
         });
         break;
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
       case "user.deleted": {
         await fetch(`${gatewayURL}/${userId}`, {
           method: "DELETE",
-          headers: gatewayHeaders(userId),
+          headers: gatewayHeaders(token),
         });
         break;
       }
