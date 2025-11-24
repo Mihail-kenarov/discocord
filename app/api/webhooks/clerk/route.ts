@@ -38,7 +38,6 @@ export async function POST(req: NextRequest) {
 
         await fetch(gatewayURL, {
           method: "POST",
-          headers: gatewayHeaders(userId),
           body: JSON.stringify(userData),
         });
         break;
