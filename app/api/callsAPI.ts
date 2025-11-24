@@ -365,7 +365,12 @@ export async function getChannelMessages(
     if (options?.limit && options.limit > 0) params.set('limit', String(options.limit));
     if (options?.before) params.set('before', String(options.before));
     const url = buildGatewayUrl(`/channels/${encodeURIComponent(String(channelId))}/messages${params.toString() ? `?${params.toString()}` : ''}`);
-    const response = await axios.get<GetMessagesResponseRaw>(url, { signal });
+    const response = await axios.get<GetMessagesResponseRaw>(url, {
+      signal,
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
     const raw = response.data;
     const authorIds = Array.from(new Set(raw.messages.map((m) => m.author_id)));
     const { data: users } = await getUsersByIds(authorIds, signal, token);
