@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
           createdAt: evt.data.created_at,
         };
 
+        console.log("Creating user in gateway:", userData);
+        
         await fetch(gatewayURL, {
           method: "POST",
           body: JSON.stringify(userData),
