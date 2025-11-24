@@ -23,18 +23,18 @@ type MeClientProps = {
 
 type ActiveChannelState = Record<string, GuildChannel["id"]>;
 
-export async function MeClient({ user, initialGuilds, friends, pending }: MeClientProps) {
+export function MeClient({ user, initialGuilds, friends, pending }: MeClientProps) {
   const [guilds, setGuilds] = React.useState<GuildWithChannels[]>(initialGuilds);
   const [selectedGuildId, setSelectedGuildId] = React.useState<string | null>(null);
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
   const [loadingGuildId, setLoadingGuildId] = React.useState<string | null>(null);
   const { getToken } = useAuth();
-  const rawToken = await getToken();
-  const token = rawToken ?? undefined;
+  const fetchToken = React.useCallback(async () => (await getToken()) ?? undefined, [getToken]);
   const refreshGuildById = React.useCallback(async (guildId: string) => {
     if (!guildId) return;
     setLoadingGuildId((current) => (current === guildId ? current : guildId));
     try {
+      const token = await fetchToken();
       const { data, error } = await getGuildById(guildId, undefined, token);
       if (error || !data) {
         if (error && error.message) {
@@ -57,7 +57,7 @@ export async function MeClient({ user, initialGuilds, friends, pending }: MeClie
     } finally {
       setLoadingGuildId((current) => (current === guildId ? null : current));
     }
-  }, []);
+  }, [fetchToken]);
 
   React.useEffect(() => {
     setGuilds(initialGuilds);
@@ -70,8 +70,7 @@ export async function MeClient({ user, initialGuilds, friends, pending }: MeClie
 
     const loadGuilds = async () => {
       try { 
-        const rawToken = await getToken();
-        const token = rawToken ?? undefined;
+        const token = await fetchToken();
         const { data, error } = await listMyGuilds(user.id, controller.signal, token);
         if (cancelled || controller.signal.aborted) return;
         if (error) {
@@ -102,7 +101,7 @@ export async function MeClient({ user, initialGuilds, friends, pending }: MeClie
       cancelled = true;
       controller.abort();
     };
-  }, [user.id, refreshGuildById, getToken]);
+  }, [user.id, refreshGuildById, fetchToken]);
 
   const selectedGuild = React.useMemo(
     () => guilds.find((guild) => guild.id === selectedGuildId) ?? null,
@@ -194,16 +193,14 @@ export async function MeClient({ user, initialGuilds, friends, pending }: MeClie
   }, []);
 
   const handleLoadChannelMessages = React.useCallback(async (guildId: string, channelId: number) => {
-    const { getToken } = useAuth();
-    const rawToken = await getToken();
-    const token = rawToken ?? undefined;
+    const token = await fetchToken();
     const { data, error } = await getChannelMessages(channelId, { limit: 50 }, undefined, token);
     if (error) {
       toast.error(error.message ?? "Failed to load messages");
       return;
     }
     if (data) replaceChannelMessages(guildId, channelId, data);
-  }, [replaceChannelMessages]);
+  }, [fetchToken, replaceChannelMessages]);
 
   const handleSendMessage = React.useCallback(async (
     guildId: string,
@@ -213,9 +210,7 @@ export async function MeClient({ user, initialGuilds, friends, pending }: MeClie
   ) => {
     const hasAttachment = Boolean(options?.attachment);
     if (!content.trim() && !hasAttachment) return false;
-    const { getToken } = useAuth();
-    const rawToken = await getToken();
-    const token = rawToken ?? undefined;
+    const token = await fetchToken();
     const { data, error } = await postChannelMessage(channelId, {
       authorId: user.id,
       content,
@@ -236,7 +231,7 @@ export async function MeClient({ user, initialGuilds, friends, pending }: MeClie
     };
     appendMessage(guildId, msg);
     return true;
-  }, [appendMessage, user.id, user.username, user.imageUrl]);
+  }, [appendMessage, fetchToken, user.id, user.username, user.imageUrl]);
 
   return (
     <SidebarProvider
