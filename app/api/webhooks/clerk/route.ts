@@ -32,43 +32,55 @@ export async function POST(req: NextRequest) {
     switch (eventType) {
       case "user.created": {
         const userData = {
-          clerkUserId: userId,
+          id: userId,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           createdAt: evt.data.created_at,
         };
 
-        await fetch(gatewayURL, {
+        const res = await fetch(gatewayURL, {
           method: "POST",
           headers: gatewayHeaders(null),
           body: JSON.stringify(userData),
         });
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`[Webhook] Failed to create user ${userId}: ${res.status} ${errorText}`);
+        }
         break;
       }
 
       case "user.updated": {
         const userData = {
-          clerkUserId: userId,
+          id: userId,
           username: evt.data.username,
           email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           updatedAt: evt.data.updated_at,
         };
 
-        await fetch(`${gatewayURL}/${userId}`, {
+        const res = await fetch(`${gatewayURL}/${userId}`, {
           method: "PUT",
           headers: gatewayHeaders(token),
           body: JSON.stringify(userData),
         });
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`[Webhook] Failed to update user ${userId}: ${res.status} ${errorText}`);
+        }
         break;
       }
 
       case "user.deleted": {
-        await fetch(`${gatewayURL}/${userId}`, {
+        const res = await fetch(`${gatewayURL}/${userId}`, {
           method: "DELETE",
           headers: gatewayHeaders(token),
         });
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`[Webhook] Failed to delete user ${userId}: ${res.status} ${errorText}`);
+        }
         break;
       }
 
