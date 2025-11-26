@@ -5,67 +5,23 @@
 
 import axios, { AxiosError } from 'axios';
 import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
+import type {
+  ApiError,
+  ChannelResponse,
+  GuildResponse,
+  AttachmentResponseRaw,
+  MessageResponseRaw,
+  GetMessagesResponseRaw,
+  PersonalDataSnapshot,
+  PersonalDataBundle,
+} from './types';
+
+// Re-export types that are part of the public API
+export type { ApiError, PersonalDataSnapshot, PersonalDataBundle };
 
 // Single, fixed gateway entrypoint. The Next rewrite in next.config.mjs maps /gw/* to the gateway service.
 const BASE_URL = "/gw";
 const GATEWAY_HOST_HINTS = ['discocord_gw', 'discocord_gw:8080', 'localhost:8080', 'localhost:8090'];
-
-export interface ApiError {
-  message: string;
-  status?: number;
-  details?: unknown;
-}
-
-type ChannelResponse = {
-  id: number | string;
-  guildId: number | string;
-  name: string;
-  position: number | string;
-};
-
-type GuildResponse = {
-  id: string | number;
-  name: string;
-  iconUrl?: string | null;
-  iconURL?: string | null;
-  ownerId?: string | number;
-  ownerID?: string | number;
-  channels?: ChannelResponse[];
-  messages?: GuildMessage[];
-};
-
-type AttachmentResponseRaw = {
-  url: string;
-  type: string;
-  size: number;
-};
-
-// Raw message response shapes from chat service
-type MessageResponseRaw = {
-  id: string;
-  channel_id: number | string;
-  author_id: string;
-  content: string;
-  created_at: string; // RFC3339
-  attachment?: AttachmentResponseRaw | null;
-};
-
-type GetMessagesResponseRaw = {
-  channel_id: number | string;
-  messages: MessageResponseRaw[];
-};
-
-export type PersonalDataSnapshot = {
-  status: string;
-  data?: unknown;
-  error?: string;
-};
-
-export type PersonalDataBundle = {
-  userId: string;
-  requestedAt: string;
-  sources: Record<string, PersonalDataSnapshot>;
-};
 
 function normalizeChannel(channel: ChannelResponse): GuildChannel {
   return {
@@ -304,7 +260,7 @@ export async function getUserPersonalData(
   }
 
   const path = `/users/${encodeURIComponent(trimmed)}/personal-data`;
-  const { data, error } = await getGateway<PersonalDataBundle>(path, signal, token );
+  const { data, error } = await getGateway<PersonalDataBundle>(path, signal, token);
   if (!error) {
     return { data, error: null };
   }
@@ -399,4 +355,4 @@ export async function getChannelMessages(
   }
 
 }
-       
+
