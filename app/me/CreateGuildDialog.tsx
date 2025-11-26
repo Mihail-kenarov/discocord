@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Upload } from "lucide-react";
 import { createGuild, type ApiError } from "@/app/api/callsAPI";
-import type { Guild } from "./types";
+import type { Guild } from "./displayDataModels";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 

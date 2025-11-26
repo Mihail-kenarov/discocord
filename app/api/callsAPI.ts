@@ -4,7 +4,7 @@
 // const { data, error } = await getFromBackend('/health');
 
 import axios, { AxiosError } from 'axios';
-import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/types';
+import type { Guild, GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from '../me/displayDataModels';
 import type {
   ApiError,
   ChannelResponse,

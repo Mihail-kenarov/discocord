@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@clerk/nextjs";
-import type { AppSidebarUser } from "./types";
+import type { AppSidebarUser } from "./displayDataModels";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { DeleteAccountDialog } from "./DeleteAccountDialog";

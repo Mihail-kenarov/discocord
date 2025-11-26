@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProfileDialog } from "./ProfileDialog";
 import { useClerk } from "@clerk/nextjs";
-import type { Guild, AppSidebarUser } from "./types";
+import type { Guild, AppSidebarUser } from "./displayDataModels";
 import { CreateGuildDialog } from "./CreateGuildDialog";
 
 type AppSidebarProps = {
@@ -96,12 +96,12 @@ export function AppSidebar({
                 <SidebarMenu>
                   {guilds.map((g) => (
                     <SidebarMenuItem key={g.id}>
-                    <SidebarMenuButton
-                      type="button"
-                      onClick={() => onSelectGuild(g.id)}
-                      isActive={activeGuildId === g.id}
-                      className="h-14 items-center gap-4 p-2"
-                    >
+                      <SidebarMenuButton
+                        type="button"
+                        onClick={() => onSelectGuild(g.id)}
+                        isActive={activeGuildId === g.id}
+                        className="h-14 items-center gap-4 p-2"
+                      >
                         <Avatar className="size-12 border border-white/10">
                           <AvatarImage className="object-cover object-center" src={g.iconUrl ?? undefined} alt={g.name} />
                           <AvatarFallback className="text-base font-semibold">

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from "./types";
+import type { GuildChannel, GuildMessage, GuildWithChannels, MemberUser } from "./displayDataModels";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";

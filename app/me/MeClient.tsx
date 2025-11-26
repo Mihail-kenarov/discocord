@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { GuildWorkspace } from "./GuildWorkspace";
-import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChannels } from "./types";
+import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChannels } from "./displayDataModels";
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";

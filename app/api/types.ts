@@ -24,7 +24,7 @@ export type GuildResponse = {
     ownerId?: string | number;
     ownerID?: string | number;
     channels?: ChannelResponse[];
-    messages?: import('../me/types').GuildMessage[];
+    messages?: import('../me/displayDataModels').GuildMessage[];
 };
 
 export type AttachmentResponseRaw = {

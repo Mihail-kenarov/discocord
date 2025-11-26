@@ -1,7 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server';
 import type { Person } from './FriendsTabs';
 import { MeClient } from './MeClient';
-import type { GuildWithChannels } from './types';
+import type { GuildWithChannels } from './displayDataModels';
 
 // Server component wrapper to fetch user and render client portion
 export default async function MePage() {
