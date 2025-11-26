@@ -84,7 +84,6 @@ export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated 
       setIsSubmitting(true);
       try {
         const token = await getToken(); // 👈 retrieve the JWT
-        console.log('🔑 User Token for Load Testing:', token);
         const guild = await createGuild({
           name: trimmedName,
           ownerId,

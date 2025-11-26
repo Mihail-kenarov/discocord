@@ -29,11 +29,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   const [activeChannelByGuild, setActiveChannelByGuild] = React.useState<ActiveChannelState>({});
   const [loadingGuildId, setLoadingGuildId] = React.useState<string | null>(null);
   const { getToken } = useAuth();
-  const fetchToken = React.useCallback(async () => {
-    const token = await getToken();
-    console.log('🔑 User Token for Load Testing:', token);
-    return token ?? undefined;
-  }, [getToken]);
+  const fetchToken = React.useCallback(async () => (await getToken()) ?? undefined, [getToken]);
   const refreshGuildById = React.useCallback(async (guildId: string) => {
     if (!guildId) return;
     setLoadingGuildId((current) => (current === guildId ? current : guildId));
