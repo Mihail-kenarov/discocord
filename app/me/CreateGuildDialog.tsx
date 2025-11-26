@@ -30,7 +30,7 @@ export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated 
   const [iconPreview, setIconPreview] = React.useState<string | null>(null);
   const [iconFile, setIconFile] = React.useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  
+
 
   const resetForm = React.useCallback(() => {
     setGuildName("");
@@ -71,38 +71,39 @@ export function CreateGuildDialog({ open, onOpenChange, ownerId, onGuildCreated 
     fileInputRef.current?.click();
   }, []);
 
-const handleSubmit = React.useCallback(
-  async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (isSubmitting) return;
-    const trimmedName = guildName.trim();
-    if (!trimmedName) {
-      toast.error("Server name is required.");
-      return;
-    }
+  const handleSubmit = React.useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (isSubmitting) return;
+      const trimmedName = guildName.trim();
+      if (!trimmedName) {
+        toast.error("Server name is required.");
+        return;
+      }
 
-    setIsSubmitting(true);
-    try {
-      const token = await getToken(); // 👈 retrieve the JWT
-      const guild = await createGuild({
-        name: trimmedName,
-        ownerId,
-        iconFile,
-      }, token ?? undefined); // 👈 pass the token to the API helper
+      setIsSubmitting(true);
+      try {
+        const token = await getToken(); // 👈 retrieve the JWT
+        console.log('🔑 User Token for Load Testing:', token);
+        const guild = await createGuild({
+          name: trimmedName,
+          ownerId,
+          iconFile,
+        }, token ?? undefined); // 👈 pass the token to the API helper
 
-      toast.success(`Created ${guild.name}`);
-      onGuildCreated?.(guild);
-      resetForm();
-      onOpenChange(false);
-    } catch (error) {
-      const apiError = error as ApiError;
-      toast.error(apiError.message || "Failed to create server");
-    } finally {
-      setIsSubmitting(false);
-    }
-  },
-  [guildName, iconFile, isSubmitting, onGuildCreated, onOpenChange, ownerId, resetForm, getToken]
-);
+        toast.success(`Created ${guild.name}`);
+        onGuildCreated?.(guild);
+        resetForm();
+        onOpenChange(false);
+      } catch (error) {
+        const apiError = error as ApiError;
+        toast.error(apiError.message || "Failed to create server");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [guildName, iconFile, isSubmitting, onGuildCreated, onOpenChange, ownerId, resetForm, getToken]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
