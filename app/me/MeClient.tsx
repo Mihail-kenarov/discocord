@@ -80,11 +80,9 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
         }
         if (data) {
           setGuilds(data);
-          setSelectedGuildId((current) => current ?? (data[0]?.id ?? null));
-          const firstGuild = data[0];
-          if (firstGuild && firstGuild.channels.length === 0) {
-            void refreshGuildById(firstGuild.id);
-          }
+          setSelectedGuildId((current) =>
+            current && data.some((guild) => guild.id === current) ? current : null
+          );
         }
       } catch (error) {
         if (!cancelled && !controller.signal.aborted) {
