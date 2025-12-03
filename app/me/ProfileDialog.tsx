@@ -59,7 +59,6 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
   const [isFetchingPersonalData, setIsFetchingPersonalData] = React.useState(false);
   const displayName = user.displayName ?? user.username;
 
-  const emailFromClerk = clerkUser?.primaryEmailAddress?.emailAddress ?? user.email ?? "";
 
   const {
     username,
@@ -145,16 +144,6 @@ function ProfileDialogBody({ user, editor }: ProfileDialogBodyProps) {
                 <PenLine className="size-4" />
               </button>
             </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Email</p>
-            <Input
-              value={emailFromClerk}
-              disabled
-              readOnly
-              className="cursor-not-allowed opacity-80"
-              placeholder="No email available"
-            />
           </div>
           {/* Removed first/last name fields */}
         </div>

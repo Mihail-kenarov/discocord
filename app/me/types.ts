@@ -38,7 +38,6 @@ export type AppSidebarUser = {
   username: string;
   displayName?: string | null;
   imageUrl?: string | null;
-  email?: string | null;
 };
 
 export type MemberUser = {

@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
         const userData = {
           clerkUserId: userId,
           username: evt.data.username,
-          email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           createdAt: evt.data.created_at,
         };
@@ -53,7 +52,6 @@ export async function POST(req: NextRequest) {
         const userData = {
           clerkUserId: userId,
           username: evt.data.username,
-          email: evt.data.email_addresses?.[0]?.email_address,
           imageUrl: evt.data.image_url,
           updatedAt: evt.data.updated_at,
         };
