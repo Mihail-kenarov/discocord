@@ -15,6 +15,7 @@ export type GuildChannel = {
 export type GuildMessage = {
   id: string;
   channelId: GuildChannel["id"];
+  authorId: string;
   author: {
     username: string;
     imageUrl?: string | null;

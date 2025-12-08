@@ -247,7 +247,9 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
              
              // Try to find author in existing messages first (cache hit) using ref to avoid stale closure
              const guild = guildsRef.current.find(g => g.id === currentGuildId);
-             const existingMsg = guild?.messages.find(m => m.author.username === data.author_id || (m as any).authorId === data.author_id); // simplified check
+             const existingMsg = guild?.messages.find((m) =>
+               m.author.username === data.author_id || m.authorId === String(data.author_id)
+             ); // simplified check
              
              if (existingMsg) {
                  authorName = existingMsg.author.username;
@@ -264,6 +266,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
              const msg: GuildMessage = {
                 id: String(data.id),
                 channelId: Number(data.channel_id),
+                authorId: String(data.author_id),
                 author: { 
                     username: authorName, 
                     imageUrl: authorImg
@@ -338,6 +341,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     const msg: GuildMessage = {
       id: String(data.id),
       channelId: Number(data.channel_id),
+      authorId: user.id,
       author: { username: user.username, imageUrl: user.imageUrl ?? null },
       timestamp: isNaN(createdAt.getTime()) ? String(data.created_at) : createdAt.toLocaleString(),
       content: data.content,

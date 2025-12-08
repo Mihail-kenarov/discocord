@@ -339,6 +339,7 @@ export async function getChannelMessages(
       return {
         id: String(m.id),
         channelId: Number(m.channel_id),
+        authorId: String(m.author_id),
         author: {
           username: profile?.username ?? String(m.author_id),
           imageUrl: profile?.imageUrl ?? null,
