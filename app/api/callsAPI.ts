@@ -353,6 +353,49 @@ export async function getChannelMessages(
   } catch (err) {
     return { data: null, error: toApiError(err as AxiosError) };
   }
+}
 
+export function createWebSocketConnection(
+  channelId: string | number,
+  token?: string
+): WebSocket | null {
+  if (typeof window === "undefined") return null;
+
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const host = window.location.host;
+  // We use the /gw proxy similarly to REST. Next.js middleware/rewrites usually handle WS upgrades if configured,
+  // or if we are hitting the gateway directly (dev setup). 
+  // If /gw is a rewrite to a backend that supports WS, this works.
+  const url = `${protocol}//${host}${BASE_URL}/channels/${encodeURIComponent(String(channelId))}/ws`;
+
+  // Standard WebSockets don't support custom headers (like Authorization) in the constructor
+  // except via the "protocols" argument (which is a hack) or query params.
+  // Our gateway/backend might not support query param auth out of the box unless we implemented it.
+  // The backend middleware checks the "Authorization" header.
+  // 
+  // LIMITATION: Browser WebSocket API does NOT allow setting custom headers.
+  // Workaround: We will use a library or, more commonly, send the token as the first message 
+  // OR rely on cookies if available. 
+  // 
+  // However, looking at the backend code `ClerkAuthMiddleware`:
+  // authHeader := c.GetHeader("Authorization")
+  // It ONLY checks the header. This is a problem for standard WebSockets in browsers.
+  //
+  // BUT: The user asked to "look into" the backend. I can modify the backend to accept 
+  // the token in the query string for WS upgrades if needed.
+  // 
+  // Let's assume for now I will modify the backend to also check Query params ("token") 
+  // or "Sec-WebSocket-Protocol".
+  // 
+  // Let's try sending it via the subprotocol header which is often allowed.
+  // const ws = new WebSocket(url, [token]); 
+  // But the server needs to accept that subprotocol.
+  
+  // Alternative: The backend uses `github.com/clerk/clerk-sdk-go/v2/jwt`.
+  // 
+  // Let's assume I'll fix the backend to check query params too.
+  
+  const urlWithAuth = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+  return new WebSocket(urlWithAuth);
 }
 

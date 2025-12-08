@@ -37,7 +37,6 @@ export default async function MePage() {
         username,
         displayName,
         imageUrl: user?.imageUrl,
-        email: user?.primaryEmailAddress?.emailAddress ?? null,
       }}
     />
   );
