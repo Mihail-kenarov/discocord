@@ -6,7 +6,7 @@ stages:
 default:
   image: oven/bun:1
   tags:
-    - docker          
+    - docker
   before_script:
     - bun --version
 
@@ -38,12 +38,10 @@ test:
     - bun --version
     - bun install --frozen-lockfile
   script:
-   
     - bun run build
     - bun run dev &
-    - sleep 10   # wait for the server to start
+    - sleep 10 # wait for the server to start
     - bun run cy:run
-
 
 deploy:
   stage: deploy
@@ -77,3 +75,28 @@ deploy:
         -e CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
         -e CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET" \
         discocord_fe
+
+dockerhub_push:
+  stage: deploy
+  image: docker:24.0.5
+  needs:
+    - build
+  tags:
+    - docker
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+  before_script:
+    - docker info
+  script:
+    - if [ -z "$DOCKERHUB_USERNAME" ]; then echo "Set DOCKERHUB_USERNAME"; exit 1; fi
+    - if [ -z "$DOCKERHUB_TOKEN" ]; then echo "Set DOCKERHUB_TOKEN"; exit 1; fi
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - |
+      docker build \
+        --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" \
+        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
+        --build-arg CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
+        --build-arg CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET" \
+        --build-arg USE_PREBUILT=true \
+        -t mihailken/discocord_fe:latest .
+    - docker push mihailken/discocord_fe:latest
