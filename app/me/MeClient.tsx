@@ -33,7 +33,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
 
   // Ref to store the active websocket so we can close it when switching channels
   const activeWsRef = React.useRef<WebSocket | null>(null);
-  
+
   // Keep a ref to guilds to access current state in WS callback without triggering re-connects
   const guildsRef = React.useRef(guilds);
   React.useEffect(() => {
@@ -239,54 +239,54 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
           const data = JSON.parse(event.data);
           // Check if this is a message object
           if (data && data.id && data.content !== undefined) {
-             const createdAt = new Date(data.created_at);
-             
-             // Resolve author info
-             let authorName = data.author_id;
-             let authorImg = null;
-             
-             // Try to find author in existing messages first (cache hit) using ref to avoid stale closure
-             const guild = guildsRef.current.find(g => g.id === currentGuildId);
-             const existingMsg = guild?.messages.find((m) =>
-               m.author.username === data.author_id || m.authorId === String(data.author_id)
-             ); // simplified check
-             
-             if (existingMsg) {
-                 authorName = existingMsg.author.username;
-                 authorImg = existingMsg.author.imageUrl;
-             } else {
-                 // Fetch user info
-                 const { data: users } = await getUsersByIds([data.author_id], undefined, token);
-                 if (users && users.length > 0) {
-                     authorName = users[0].username;
-                     authorImg = users[0].imageUrl;
-                 }
-             }
+            const createdAt = new Date(data.created_at);
 
-             const msg: GuildMessage = {
-                id: String(data.id),
-                channelId: Number(data.channel_id),
-                authorId: String(data.author_id),
-                author: { 
-                    username: authorName, 
-                    imageUrl: authorImg
-                },
-                timestamp: isNaN(createdAt.getTime()) ? String(data.created_at) : createdAt.toLocaleString(),
-                content: data.content,
-                attachment: data.attachment ? {
-                    url: data.attachment.url, // Note: might need normalization if relative
-                    type: data.attachment.type,
-                    size: data.attachment.size
-                } : null,
-              };
-              
-              // Normalize attachment URL just in case, similar to callsAPI logic
-              // However, we don't have access to callsAPI internals here.
-              // Assuming backend sends full URL or frontend handles it. 
-              // The backend sends whatever is stored. If stored as relative, we might have issues.
-              // But let's assume it works for now or is absolute.
-              
-              appendMessage(currentGuildId, msg);
+            // Resolve author info
+            let authorName = data.author_id;
+            let authorImg = null;
+
+            // Try to find author in existing messages first (cache hit) using ref to avoid stale closure
+            const guild = guildsRef.current.find(g => g.id === currentGuildId);
+            const existingMsg = guild?.messages.find((m) =>
+              m.author.username === data.author_id || m.authorId === String(data.author_id)
+            ); // simplified check
+
+            if (existingMsg) {
+              authorName = existingMsg.author.username;
+              authorImg = existingMsg.author.imageUrl;
+            } else {
+              // Fetch user info
+              const { data: users } = await getUsersByIds([data.author_id], undefined, token);
+              if (users && users.length > 0) {
+                authorName = users[0].username;
+                authorImg = users[0].imageUrl;
+              }
+            }
+
+            const msg: GuildMessage = {
+              id: String(data.id),
+              channelId: Number(data.channel_id),
+              authorId: String(data.author_id),
+              author: {
+                username: authorName,
+                imageUrl: authorImg
+              },
+              timestamp: isNaN(createdAt.getTime()) ? String(data.created_at) : createdAt.toLocaleString(),
+              content: data.content,
+              attachment: data.attachment ? {
+                url: data.attachment.url, // Note: might need normalization if relative
+                type: data.attachment.type,
+                size: data.attachment.size
+              } : null,
+            };
+
+            // Normalize attachment URL just in case, similar to callsAPI logic
+            // However, we don't have access to callsAPI internals here.
+            // Assuming backend sends full URL or frontend handles it. 
+            // The backend sends whatever is stored. If stored as relative, we might have issues.
+            // But let's assume it works for now or is absolute.
+
+            appendMessage(currentGuildId, msg);
           }
         } catch (e) {
           console.error("WS parse error", e);
