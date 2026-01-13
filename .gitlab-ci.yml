@@ -39,9 +39,7 @@ test:
     - bun install --frozen-lockfile
   script:
     - bun run build
-    - bun run dev &
-    - sleep 10 # wait for the server to start
-    - bun run cy:run
+    - bun run test:e2e
 
 deploy:
   stage: deploy
