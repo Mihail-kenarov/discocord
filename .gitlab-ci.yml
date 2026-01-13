@@ -5,6 +5,8 @@ stages:
 
 default:
   image: oven/bun:1
+  tags:
+    - docker
   before_script:
     - bun --version
 
@@ -25,6 +27,8 @@ test:
   needs:
     - build
   image: cypress/browsers:latest
+  tags:
+    - docker
   variables:
     BUN_INSTALL: "/root/.bun"
   before_script:
@@ -44,6 +48,8 @@ deploy:
   needs:
     - build
   image: docker:24.0.5
+  tags:
+    - docker
   variables:
     # Use host Docker instead of DinD
     DOCKER_HOST: unix:///var/run/docker.sock
@@ -75,6 +81,8 @@ dockerhub_push:
   image: docker:24.0.5
   needs:
     - build
+  tags:
+    - docker
   variables:
     DOCKER_HOST: unix:///var/run/docker.sock
   before_script:
