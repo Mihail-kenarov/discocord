@@ -39,7 +39,24 @@ test:
     - bun install --frozen-lockfile
   script:
     - bun run build
-    - bun run test:e2e
+    - |
+      # Start the server in background
+      bun run start &
+      SERVER_PID=$!
+      # Wait for server to be ready
+      for i in $(seq 1 60); do
+        if curl -s http://localhost:3000/favicon.ico > /dev/null 2>&1; then
+          break
+        fi
+        sleep 1
+      done
+      # Run Cypress tests and capture exit code
+      bun run cy:run
+      CYPRESS_EXIT=$?
+      # Kill the server
+      kill $SERVER_PID 2>/dev/null || true
+      # Exit with Cypress's exit code
+      exit $CYPRESS_EXIT
 
 deploy:
   stage: deploy
@@ -59,7 +76,7 @@ deploy:
       export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
       export CLERK_SECRET_KEY="$CLERK_SECRET_KEY"
       export CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET"
-    - docker compose down frontend --remove-orphans || true
+    - docker rm -f discocord_fe || true
     - docker compose up -d --build --force-recreate frontend
     - docker compose ps
 
