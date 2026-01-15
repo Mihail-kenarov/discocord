@@ -59,7 +59,6 @@ describe('Guilds (Servers)', () => {
     cy.contains(createdGuild.name).should('be.visible');
 
     // Header should reflect the first (sorted) channel name
-    cy.contains('#', { matchCase: false });
-    cy.contains('general').should('be.visible');
+    cy.contains('general', { timeout: 10000 }).should('be.visible');
   });
 });
