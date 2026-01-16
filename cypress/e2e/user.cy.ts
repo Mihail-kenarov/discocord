@@ -20,6 +20,7 @@ describe('User profile', () => {
       .clear()
       .type('guest_renamed');
 
+
     // Save changes; button becomes disabled briefly and then disappears when no pending changes
     cy.get('[data-cy="profile-save-username"]').should('be.enabled').click();
 
