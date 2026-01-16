@@ -72,7 +72,7 @@ deploy:
     - docker network inspect discocord_net >/dev/null 2>&1 || docker network create discocord_net
     - |
       # Pass CI variables to docker-compose via environment
-      export NEXT_PUBLIC_API_URL="http://discocord_gw:8080"
+      export GATEWAY_URL="${GATEWAY_URL:-http://discocord_gw:8080}"
       export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
       export CLERK_SECRET_KEY="$CLERK_SECRET_KEY"
       export CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET"
@@ -97,7 +97,7 @@ dockerhub_push:
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
     - |
       docker build \
-        --build-arg NEXT_PUBLIC_API_URL="http://discocord_gw:8080" \
+        --build-arg GATEWAY_URL="${GATEWAY_URL:-http://discocord_gw:8080}" \
         --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" \
         --build-arg CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
         --build-arg CLERK_WEBHOOK_SIGNING_SECRET="$CLERK_WEBHOOK_SIGNING_SECRET" \
