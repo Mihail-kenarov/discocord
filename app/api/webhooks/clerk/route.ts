@@ -3,7 +3,8 @@ import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
 
-const gatewayURL = "http://discocord_gw:8080/users";
+// Use GATEWAY_URL for GKE deployments, fallback to Docker network for local
+const gatewayURL = `${process.env.GATEWAY_URL || "http://discocord_gw:8080"}/users`;
 
 
 function gatewayHeaders(token?: string | null) {
@@ -39,12 +40,16 @@ export async function POST(req: NextRequest) {
           createdAt: evt.data.created_at,
         };
 
-        console.log("Creating user in gateway:", userData);
-        
-        await fetch(gatewayURL, {
+        console.log("Creating user in gateway:", userData, "URL:", gatewayURL);
+
+        const response = await fetch(gatewayURL, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(userData),
         });
+        if (!response.ok) {
+          console.error("Failed to create user in gateway:", response.status, await response.text());
+        }
         break;
       }
 
