@@ -9,7 +9,7 @@ import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChanne
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
-import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage, getUsersByIds } from "@/app/api/callsAPI";
+import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage, createWebSocketConnection, getUsersByIds } from "@/app/api/callsAPI";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 
@@ -31,8 +31,8 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   const { getToken } = useAuth();
   const fetchToken = React.useCallback(async () => (await getToken()) ?? undefined, [getToken]);
 
-  // WebSocket ref - DISABLED along with WebSocket integration
-  // const activeWsRef = React.useRef<WebSocket | null>(null);
+  // Ref to store the active websocket so we can close it when switching channels
+  const activeWsRef = React.useRef<WebSocket | null>(null);
 
   // Keep a ref to guilds to access current state in WS callback without triggering re-connects
   const guildsRef = React.useRef(guilds);
@@ -204,10 +204,7 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     }));
   }, []);
 
-  // WebSocket Integration - DISABLED: Backend (Gateway/CS) does not support WebSocket
-  // If real-time messaging is needed, implement WebSocket support in the backend first.
-  // The code below has been commented out to prevent console errors.
-  /*
+  // WebSocket Integration
   React.useEffect(() => {
     if (!activeChannelId || !selectedGuildId) {
       if (activeWsRef.current) {
@@ -283,7 +280,6 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       }
     };
   }, [activeChannelId, selectedGuildId, fetchToken, appendMessage]);
-  */
 
   const handleLoadChannelMessages = React.useCallback(async (guildId: string, channelId: number) => {
     const token = await fetchToken();
