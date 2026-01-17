@@ -9,7 +9,7 @@ import type { AppSidebarUser, Guild, GuildChannel, GuildMessage, GuildWithChanne
 import type { Person } from "./FriendsTabs";
 import { FriendsTabs } from "./FriendsTabs";
 import { ClientGatewayButton } from "./ClientGatewayButton";
-import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage, createWebSocketConnection, getUsersByIds } from "@/app/api/callsAPI";
+import { getGuildById, listMyGuilds, getChannelMessages, postChannelMessage, getUsersByIds } from "@/app/api/callsAPI";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 
@@ -31,8 +31,8 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
   const { getToken } = useAuth();
   const fetchToken = React.useCallback(async () => (await getToken()) ?? undefined, [getToken]);
 
-  // Ref to store the active websocket so we can close it when switching channels
-  const activeWsRef = React.useRef<WebSocket | null>(null);
+  // WebSocket ref - DISABLED along with WebSocket integration
+  // const activeWsRef = React.useRef<WebSocket | null>(null);
 
   // Keep a ref to guilds to access current state in WS callback without triggering re-connects
   const guildsRef = React.useRef(guilds);
@@ -204,7 +204,10 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
     }));
   }, []);
 
-  // WebSocket Integration
+  // WebSocket Integration - DISABLED: Backend (Gateway/CS) does not support WebSocket
+  // If real-time messaging is needed, implement WebSocket support in the backend first.
+  // The code below has been commented out to prevent console errors.
+  /*
   React.useEffect(() => {
     if (!activeChannelId || !selectedGuildId) {
       if (activeWsRef.current) {
@@ -213,93 +216,65 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
       }
       return;
     }
-
-    // Capture IDs for the effect closure
     const currentChannelId = activeChannelId;
     const currentGuildId = selectedGuildId;
-
     let ws: WebSocket | null = null;
     let isCancelled = false;
-
     const connect = async () => {
       const token = await fetchToken();
       if (isCancelled) return;
-
       if (activeWsRef.current) {
         activeWsRef.current.close();
         activeWsRef.current = null;
       }
-
       ws = createWebSocketConnection(currentChannelId, token);
       if (!ws) return;
       activeWsRef.current = ws;
-
       ws.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
-          // Check if this is a message object
           if (data && data.id && data.content !== undefined) {
             const createdAt = new Date(data.created_at);
-
-            // Resolve author info
             let authorName = data.author_id;
             let authorImg = null;
-
-            // Try to find author in existing messages first (cache hit) using ref to avoid stale closure
             const guild = guildsRef.current.find(g => g.id === currentGuildId);
             const existingMsg = guild?.messages.find((m) =>
               m.author.username === data.author_id || m.authorId === String(data.author_id)
-            ); // simplified check
-
+            );
             if (existingMsg) {
               authorName = existingMsg.author.username;
               authorImg = existingMsg.author.imageUrl;
             } else {
-              // Fetch user info
               const { data: users } = await getUsersByIds([data.author_id], undefined, token);
               if (users && users.length > 0) {
                 authorName = users[0].username;
                 authorImg = users[0].imageUrl;
               }
             }
-
             const msg: GuildMessage = {
               id: String(data.id),
               channelId: Number(data.channel_id),
               authorId: String(data.author_id),
-              author: {
-                username: authorName,
-                imageUrl: authorImg
-              },
+              author: { username: authorName, imageUrl: authorImg },
               timestamp: isNaN(createdAt.getTime()) ? String(data.created_at) : createdAt.toLocaleString(),
               content: data.content,
               attachment: data.attachment ? {
-                url: data.attachment.url, // Note: might need normalization if relative
+                url: data.attachment.url,
                 type: data.attachment.type,
                 size: data.attachment.size
               } : null,
             };
-
-            // Normalize attachment URL just in case, similar to callsAPI logic
-            // However, we don't have access to callsAPI internals here.
-            // Assuming backend sends full URL or frontend handles it. 
-            // The backend sends whatever is stored. If stored as relative, we might have issues.
-            // But let's assume it works for now or is absolute.
-
             appendMessage(currentGuildId, msg);
           }
         } catch (e) {
           console.error("WS parse error", e);
         }
       };
-
       ws.onerror = (e) => {
         console.error("WS Error", e);
       };
     };
-
     void connect();
-
     return () => {
       isCancelled = true;
       if (activeWsRef.current) {
@@ -307,7 +282,8 @@ export function MeClient({ user, initialGuilds, friends, pending }: MeClientProp
         activeWsRef.current = null;
       }
     };
-  }, [activeChannelId, selectedGuildId, fetchToken, appendMessage]); // Removed guilds from dep
+  }, [activeChannelId, selectedGuildId, fetchToken, appendMessage]);
+  */
 
   const handleLoadChannelMessages = React.useCallback(async (guildId: string, channelId: number) => {
     const token = await fetchToken();
