@@ -29,6 +29,7 @@ function normalizeChannel(channel: ChannelResponse): GuildChannel {
     guildId: Number(channel.guildId),
     name: channel.name,
     position: Number(channel.position),
+    type: channel.type ?? "text",
   };
 }
 

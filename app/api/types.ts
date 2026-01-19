@@ -14,6 +14,7 @@ export type ChannelResponse = {
     guildId: number | string;
     name: string;
     position: number | string;
+    type?: "text" | "voice";
 };
 
 export type GuildResponse = {

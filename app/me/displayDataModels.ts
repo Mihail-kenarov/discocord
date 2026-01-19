@@ -15,6 +15,7 @@ export type GuildChannel = {
     guildId: number;
     name: string;
     position: number;
+    type: "text" | "voice";
 };
 
 export type GuildMessage = {

@@ -6,11 +6,13 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Hash, Paperclip, SendHorizontal, Smile, Users } from "lucide-react";
+import { Hash, Paperclip, SendHorizontal, Smile, Users, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getGuildMembers, getUsersByIds } from "@/app/api/callsAPI";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
+import { VoiceChannelRoom } from "./VoiceChannelRoom";
+import { useUser } from "@clerk/nextjs";
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
@@ -52,6 +54,7 @@ export function GuildWorkspace({
   const [members, setMembers] = React.useState<MemberUser[] | null>(null);
   const [membersLoading, setMembersLoading] = React.useState(false);
   const { getToken } = useAuth();
+  const { user } = useUser();
   const fetchToken = React.useCallback(async () => (await getToken()) ?? undefined, [getToken]);
 
   const sortedChannels = React.useMemo(
@@ -149,12 +152,22 @@ export function GuildWorkspace({
           activeChannelId={activeChannel?.id ?? null}
           onSelectChannel={onSelectChannel}
         />
-        <ChannelChat
-          guildId={guild.id}
-          channel={activeChannel}
-          messages={channelMessages}
-          onSendMessage={onSendMessage}
-        />
+        {activeChannel?.type === "voice" ? (
+          <VoiceChannelRoom
+            channelId={activeChannel.id}
+            channelName={activeChannel.name}
+            currentUserId={user?.id ?? ""}
+            members={members}
+            getToken={fetchToken}
+          />
+        ) : (
+          <ChannelChat
+            guildId={guild.id}
+            channel={activeChannel}
+            messages={channelMessages}
+            onSendMessage={onSendMessage}
+          />
+        )}
         {showMembers && <MembersPanel members={members} loading={membersLoading} />}
       </div>
     </div>
@@ -168,14 +181,18 @@ type ChannelSidebarProps = {
 };
 
 function ChannelSidebar({ channels, activeChannelId, onSelectChannel }: ChannelSidebarProps) {
+  const textChannels = channels.filter((ch) => ch.type !== "voice");
+  const voiceChannels = channels.filter((ch) => ch.type === "voice");
+
   return (
     <aside className="w-64 border-r border-white/10 bg-[#060606] px-3 py-4">
+      {/* Text Channels */}
       <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Text Channels</p>
-      {channels.length === 0 ? (
-        <p className="mt-3 text-xs text-neutral-600">No channels yet.</p>
+      {textChannels.length === 0 ? (
+        <p className="mt-3 text-xs text-neutral-600">No text channels yet.</p>
       ) : (
         <div className="mt-3 space-y-1">
-          {channels.map((channel) => {
+          {textChannels.map((channel) => {
             const isActive = activeChannelId === channel.id;
             return (
               <button
@@ -190,6 +207,34 @@ function ChannelSidebar({ channels, activeChannelId, onSelectChannel }: ChannelS
                 )}
               >
                 <Hash className={cn("size-4", isActive ? "text-emerald-300" : "text-neutral-500")} />
+                <span className="truncate">{channel.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Voice Channels */}
+      <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-neutral-500">Voice Channels</p>
+      {voiceChannels.length === 0 ? (
+        <p className="mt-3 text-xs text-neutral-600">No voice channels yet.</p>
+      ) : (
+        <div className="mt-3 space-y-1">
+          {voiceChannels.map((channel) => {
+            const isActive = activeChannelId === channel.id;
+            return (
+              <button
+                key={channel.id}
+                type="button"
+                onClick={() => onSelectChannel(channel.id)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+                  isActive
+                    ? "bg-emerald-500/10 text-emerald-200"
+                    : "text-neutral-400 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <Volume2 className={cn("size-4", isActive ? "text-emerald-300" : "text-neutral-500")} />
                 <span className="truncate">{channel.name}</span>
               </button>
             );
